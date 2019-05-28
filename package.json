@@ -1,0 +1,40 @@
+{
+  "name": "pinjam-ruang-backend",
+  "version": "1.0.0",
+  "description": "Pinjam-ruang RESTful API",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --exec babel-node index.js",
+    "init-lint": "eslint --init",
+    "init-db": "db-migrate db:create pinjam-ruang",
+    "create-migration": "db-migrate create",
+    "migration-up": "db-migrate up",
+    "migration-down": "db-migrate down"
+  },
+  "author": "Cristopher Namchee",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/node": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "cors": "^2.8.5",
+    "cross-env": "^5.2.0",
+    "debug": "^4.1.1",
+    "eslint": "^5.16.0",
+    "eslint-plugin-node": "^9.1.0",
+    "morgan": "^1.9.1",
+    "nodemon": "^1.19.1"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.4",
+    "db-migrate": "^0.11.5",
+    "db-migrate-mysql": "^1.1.10",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "express-validator": "^5.3.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql": "^2.17.1"
+  }
+}
