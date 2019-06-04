@@ -40,6 +40,7 @@ function createUserTable(db) {
       username: {
         type: 'string',
         notNull: true,
+        unique: true,
         length: 20
       },
 
@@ -95,7 +96,7 @@ function createAcaraTable(db) {
       name: {
         type: 'string',
         notNull: true,
-        length: 100
+        length: 50
       },
 
       user_id: {
@@ -127,6 +128,12 @@ function createAcaraTable(db) {
           mapping: 'id'
         }
       }
+    },
+
+    desc: {
+      type: 'string',
+      notNull: true,
+      length: 100
     },
 
     ifNotExists: true

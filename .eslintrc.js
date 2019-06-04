@@ -5,7 +5,8 @@ module.exports = {
   },
   'extends': [
     'eslint:recommended',
-    'plugin:node/recommended'
+    'plugin:node/recommended',
+    'google'
   ],
   'globals': {
     'Atomics': 'readonly',
@@ -33,6 +34,14 @@ module.exports = {
       'always'
     ],
     // let babel handle this
-    "node/no-unsupported-features/es-syntax": "off"
+    'node/no-unsupported-features/es-syntax': 'off',
+    'object-curly-spacing': [
+      'error',
+      'always'
+    ],
+    'arrow-parens': [
+      'error',
+      'as-needed'
+    ]
   }
 };
