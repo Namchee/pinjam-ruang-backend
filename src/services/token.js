@@ -8,94 +8,167 @@ import { asyncWrapper } from './misc';
 import jwt from 'jsonwebtoken';
 import util from 'util';
 
-const options = {
-  issuer: process.env.ISSUER || '',
-  expiresIn: '5m',
-};
+/**
+ * TODO: Generate dis
+ */
+export class TokenProcessor {
+  static get _OPTIONS() {
+    return {
+      issuer: process.env.ISSUER || '',
+      expiresIn: '5m',
+    };
+  }
 
-const sign = util.promisify(jwt.sign);
-const verify = util.promisify(jwt.verify);
-const primary_secret = process.env.MAIN_SECRET || 'SECRET';
-const sync_secret = process.env.SYNC_SECRET || 'SECRET';
+  static get _sign() {
+    return util.promisify(jwt.sign);
+  }
 
-export async function verify_token(token, sync) {
-  const { err: primary_err, res: primary_res } = await asyncWrapper(verify_primary_token(token));
-  if (primary_err) {
-    if (primary_err.name !== 'TokenExpiredError') {
-      throw primary_err;
+  static get _verify() {
+    return util.promisify(jwt.verify);
+  }
+
+  static get _decode() {
+    return util.promisify(jwt.decode);
+  }
+
+  static get _PRIMARY_SECRET() {
+    return process.env.PRIMARY_SECRET || 'thisisasecret';
+  }
+
+  static get _SYNC_SECRET() {
+    return process.env.SYNC_SECRET || 'thisisanothersecret';
+  }
+
+  static async _signToken(payload, secret, options = undefined) {
+    const { err, res } = await asyncWrapper(
+      TokenProcessor._sign(
+        payload,
+        secret,
+        options,
+      )
+    );
+
+    if (err) {
+      throw new Error(err);
     }
-    
-    const { err: sync_err, res: sync_res } = await asyncWrapper(verify_sync_token(sync, token));
-    if (sync_err) {
-      throw sync_err;
+
+    return res;
+  }
+
+  static async _verifyPrimaryToken(token) {
+    const { err, res } = await asyncWrapper(
+      TokenProcessor._verify(
+        token,
+        TokenProcessor._PRIMARY_SECRET,
+        TokenProcessor._OPTIONS,
+      )
+    );
+
+    if (err) {
+      throw new Error(err);
+    }
+
+    return res;
+  }
+
+  static async _verifySyncToken(token, sync) {
+    const { err, res } = await asyncWrapper(
+      TokenProcessor._verify(
+        sync,
+        TokenProcessor._SYNC_SECRET
+      )
+    );
+
+    if (err) {
+      throw new Error(err);
+    }
+
+    if (res !== token) {
+      throw new Error('Invalid Sync Token');
+    }
+
+    return res;
+  }
+
+  static async generateToken(user) {
+    const { err: primaryErr, res: primaryRes } = await asyncWrapper(
+      TokenProcessor._signToken(
+        user,
+        TokenProcessor._PRIMARY_SECRET,
+        TokenProcessor._OPTIONS,
+      )
+    );
+
+    if (primaryErr) {
+      throw new Error(primaryErr);
+    }
+
+    const { err: syncErr, res: syncRes } = await asyncWrapper(
+      TokenProcessor._signToken(
+        primaryRes,
+        TokenProcessor._SYNC_SECRET,
+      )
+    );
+
+    if (syncErr) {
+      throw new Error(syncErr);
     }
 
     return {
-      status: 2,
-      data: null,
+      primary: primaryRes,
+      sync: syncRes,
     };
   }
 
-  return {
-    status: 1,
-    data: primary_res,
-  };
-}
+  static async refreshToken(token) {
+    const { err: decodeErr, res: decoded } = await asyncWrapper(
+      TokenProcessor._decode(
+        token
+      )
+    );
 
-export async function refresh_token(token) {
-  const user = jwt.decode(token);
-  const { err, res } = await asyncWrapper(generate_token(user));
-  if (err) {
-    throw err;
+    if (decodeErr) {
+      throw new Error(decodeErr);
+    }
+
+    return await TokenProcessor.generateToken(decoded);
   }
 
-  return res;
-}
+  static async verifyToken(token, sync) {
+    const verifyPrimary = asyncWrapper(
+      TokenProcessor._verifyPrimaryToken(
+        token
+      )
+    );
 
-async function sign_token(payload, secret, options = null) {
-  const { err, res } = await asyncWrapper(sign(payload, secret, options));
-  if (err) {
-    throw err;
+    const verifySync = asyncWrapper(
+      TokenProcessor._verifySyncToken(
+        sync,
+        token
+      )
+    );
+
+    return Promise.all([verifyPrimary, verifySync])
+      .then(([{ err: primaryErr, res: primaryRes }, { err: syncErr }]) => {
+        if (primaryErr) {
+          if (primaryErr.name !== 'TokenExpiredError') {
+            throw new Error(primaryErr);
+          }
+
+          if (syncErr) {
+            throw new Error(syncErr);
+          }
+
+          return {
+            status: 2,
+            data: null,
+          };
+        } else {
+          return {
+            status: 1,
+            data: primaryRes,
+          };
+        }
+      });
   }
-
-  return res;
 }
-
-async function verify_primary_token(token) {
-  const { err, res } = await asyncWrapper(verify(token, primary_secret, options));
-  if (err) {
-    throw err;
-  }
-
-  return res;
-}
-
-async function verify_sync_token(sync, primary) {
-  const { err, res } = await asyncWrapper(verify(sync, sync_secret));
-  if (err || res !== primary) {
-    throw err;
-  } 
-
-  return res;
-}
-
-async function generate_token(user) {
-  const { err: primary_err, res: primary_res }= await asyncWrapper(sign_token(user, primary_secret, options));
-  const { err: sync_err, res: sync_res } = await asyncWrapper(sign_token(primary_res, sync_secret));
-  if (primary_err || sync_err) {
-    throw {
-      primary: primary_err,
-      sync: sync_err,
-    };
-  }
-
-  return {
-    primary: primary_res,
-    sync: sync_res,
-  };
-}
-
-export default {
-  verifyToken: verify_token,
-  refreshToken: refresh_token,
-};

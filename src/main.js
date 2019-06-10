@@ -28,6 +28,6 @@ app.use('/api', apiRoute);
 app.use('*', redirect);
 
 app.listen(port, () => {
-  /* eslint-disable-next-line */
+  // eslint-disable-next-line no-console
   console.log(`Server runnin' at port ${port}`);
 });

@@ -7,6 +7,7 @@
     "dev": "nodemon --exec babel-node ./src/main.js",
     "init-lint": "eslint --init",
     "init-db": "db-migrate db:create pinjam-ruang",
+    "init-prettier": "prettier-init",
     "create-migration": "db-migrate create",
     "migration-up": "db-migrate up",
     "migration-down": "db-migrate down",
@@ -26,7 +27,9 @@
     "eslint-plugin-node": "^9.1.0",
     "jsdoc": "^3.6.2",
     "morgan": "^1.9.1",
-    "nodemon": "^1.19.1"
+    "nodemon": "^1.19.1",
+    "prettier": "^1.18.2",
+    "prettier-init": "^1.1.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

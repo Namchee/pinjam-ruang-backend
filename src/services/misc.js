@@ -18,8 +18,13 @@ export function asyncWrapper(promise) {
       };
     })
     .catch(err => {
+      let error = err;
+      if (error instanceof Error) {
+        error = err.message;
+      }
+
       return {
-        err,
+        err: error,
       };
     });
 }
