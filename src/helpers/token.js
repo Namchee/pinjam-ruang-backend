@@ -12,36 +12,36 @@ import util from 'util';
  * TODO: Generate dis
  */
 export class TokenProcessor {
-  static get _OPTIONS() {
+  static get __OPTIONS__() {
     return {
       issuer: process.env.ISSUER || '',
       expiresIn: '5m',
     };
   }
 
-  static get _sign() {
+  static get __sign() {
     return util.promisify(jwt.sign);
   }
 
-  static get _verify() {
+  static get __verify() {
     return util.promisify(jwt.verify);
   }
 
-  static get _decode() {
+  static get __decode() {
     return util.promisify(jwt.decode);
   }
 
-  static get _PRIMARY_SECRET() {
+  static get __PRIMARY_SECRET__() {
     return process.env.PRIMARY_SECRET || 'thisisasecret';
   }
 
-  static get _SYNC_SECRET() {
+  static get __SYNC_SECRET__() {
     return process.env.SYNC_SECRET || 'thisisanothersecret';
   }
 
-  static async _signToken(payload, secret, options = undefined) {
+  static async __signToken(payload, secret, options = undefined) {
     const { err, res } = await asyncWrapper(
-      TokenProcessor._sign(
+      TokenProcessor.__sign(
         payload,
         secret,
         options,
@@ -55,12 +55,12 @@ export class TokenProcessor {
     return res;
   }
 
-  static async _verifyPrimaryToken(token) {
+  static async __verifyPrimaryToken(token) {
     const { err, res } = await asyncWrapper(
-      TokenProcessor._verify(
+      TokenProcessor.__verify(
         token,
-        TokenProcessor._PRIMARY_SECRET,
-        TokenProcessor._OPTIONS,
+        TokenProcessor.__PRIMARY_SECRET__,
+        TokenProcessor.__OPTIONS__,
       )
     );
 
@@ -71,11 +71,11 @@ export class TokenProcessor {
     return res;
   }
 
-  static async _verifySyncToken(token, sync) {
+  static async __verifySyncToken(token, sync) {
     const { err, res } = await asyncWrapper(
-      TokenProcessor._verify(
+      TokenProcessor.__verify(
         sync,
-        TokenProcessor._SYNC_SECRET
+        TokenProcessor.__SYNC_SECRET__
       )
     );
 
@@ -92,26 +92,26 @@ export class TokenProcessor {
 
   static async generateToken(user) {
     const { err: primaryErr, res: primaryRes } = await asyncWrapper(
-      TokenProcessor._signToken(
+      TokenProcessor.__signToken(
         user,
-        TokenProcessor._PRIMARY_SECRET,
-        TokenProcessor._OPTIONS,
+        TokenProcessor.__PRIMARY_SECRET__,
+        TokenProcessor.__OPTIONS__,
       )
     );
 
     if (primaryErr) {
-      throw new Error(primaryErr);
+      throw new Error(`Cannot generate primary token: ${primaryErr}`);
     }
 
     const { err: syncErr, res: syncRes } = await asyncWrapper(
-      TokenProcessor._signToken(
+      TokenProcessor.__signToken(
         primaryRes,
-        TokenProcessor._SYNC_SECRET,
+        TokenProcessor.__SYNC_SECRET__,
       )
     );
 
     if (syncErr) {
-      throw new Error(syncErr);
+      throw new Error(`Cannot generate sync token: ${syncErr}`);
     }
 
     return {
@@ -122,7 +122,7 @@ export class TokenProcessor {
 
   static async refreshToken(token) {
     const { err: decodeErr, res: decoded } = await asyncWrapper(
-      TokenProcessor._decode(
+      TokenProcessor.__decode(
         token
       )
     );
@@ -136,13 +136,13 @@ export class TokenProcessor {
 
   static async verifyToken(token, sync) {
     const verifyPrimary = asyncWrapper(
-      TokenProcessor._verifyPrimaryToken(
+      TokenProcessor.__verifyPrimaryToken(
         token
       )
     );
 
     const verifySync = asyncWrapper(
-      TokenProcessor._verifySyncToken(
+      TokenProcessor.__verifySyncToken(
         sync,
         token
       )

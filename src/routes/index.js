@@ -7,11 +7,12 @@
  */
 
 import express from 'express';
-import auth from './../middlewares/auth';
+// import auth from './../middlewares/auth';
+import { api } from './api';
 
 const router = express.Router();
 
 // view code here
-router.post('*', auth.loginCheck);
+router.use('/api', api);
 
-export default router;
+export { router };

@@ -6,7 +6,8 @@ module.exports = {
   'extends': [
     'eslint:recommended',
     'plugin:node/recommended',
-    'google'
+    'google',
+    "prettier"
   ],
   'globals': {
     'Atomics': 'readonly',
@@ -42,6 +43,7 @@ module.exports = {
     'arrow-parens': [
       'error',
       'as-needed'
-    ]
+    ],
+    'require-jsdoc' : 'off'
   }
 };

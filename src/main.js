@@ -1,8 +1,8 @@
 import '../config/config';
 import express from 'express';
 import logger from 'morgan';
-import apiRoute from './routes/api';
-import redirect from './routes/redirects';
+import { router as routes } from './routes/index';
+import { errorHandler, catch404 } from './routes/error';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 
@@ -24,8 +24,10 @@ if (process.env.DEV_MODE) {
 app.use(logger(process.env.DEV_MODE ? 'dev' : 'tiny'));
 
 // routes
-app.use('/api', apiRoute);
-app.use('*', redirect);
+app.use('/', routes);
+
+app.use(catch404);
+app.use(errorHandler);
 
 app.listen(port, () => {
   // eslint-disable-next-line no-console
