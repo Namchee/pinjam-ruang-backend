@@ -1,21 +1,24 @@
-import { BaseRepository } from './base';
+export const UserRepository = (function() {
+  let connection = undefined;
 
-export class UserRepository extends BaseRepository {
-  constructor(conn) {
-    super(conn);
-  }
+  return {
+    create: function(conn) {
+      connection = conn;
+      return this;
+    },
 
-  findAll() {
-    const query = "SELECT id, username, name, email, isAdmin FROM user";
+    findAll: function() {
+      const query = 'SELECT id, username, name, email, isAdmin from user';
 
-    return new Promise((resolve, reject) => {
-      this.connection.query(query, (err, res, fields) => {
-        if (err) {
-          reject(err);
-        }
+      return new Promise((resolve, reject) => {
+        connection.query(query, (err, res) => {
+          if (err) {
+            reject(err);
+          }
 
-        resolve(res, fields);
+          resolve(res);
+        });
       });
-    });
-  }
-}
+    }
+  };
+})();
