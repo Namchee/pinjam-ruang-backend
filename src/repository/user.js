@@ -2,7 +2,7 @@ export const UserRepository = (function() {
   let connection = undefined;
 
   return {
-    create: function(conn) {
+    inject: function(conn) {
       connection = conn;
       return this;
     },

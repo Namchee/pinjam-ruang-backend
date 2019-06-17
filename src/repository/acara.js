@@ -1,7 +1,14 @@
-import { BaseRepository } from './base';
+export const AcaraRepository = (function() {
+  let connection = undefined;
 
-export class AcaraRepository extends BaseRepository {
-  constructor(conn) {
-    super(conn);
+  return {
+    inject: function(conn) {
+      connection = conn;
+      return this;
+    }
+
+    findAll: function() {
+      const query = 'SELECT '
+    }
   }
-}
+})();

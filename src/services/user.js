@@ -5,8 +5,8 @@ export const UserService = (function() {
   let repository = undefined;
 
   return {
-    create: function(conn) {
-      repository = UserRepository.create(conn);
+    inject: function(conn) {
+      repository = UserRepository.inject(conn);
       return this;
     },
 

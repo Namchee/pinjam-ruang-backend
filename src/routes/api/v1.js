@@ -4,7 +4,7 @@ import { UserController } from './../../controller/user';
 
 const router = express.Router();
 
-const userController = UserController.create(createConnection());
+const userController = UserController.inject(createConnection());
 
 router.get('/get_user', userController.findAllUsers);
 

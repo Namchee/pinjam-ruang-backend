@@ -99,6 +99,18 @@ function createAcaraTable(db) {
         length: 50
       },
 
+      status: {
+        type: 'int',
+        notNull: true,
+        unsigned: true
+      },
+
+      desc: {
+        type: 'string',
+        notNull: true,
+        length: 100
+      },
+
       user_id: {
         type: 'int',
         unsigned: true,
@@ -128,12 +140,6 @@ function createAcaraTable(db) {
           mapping: 'id'
         }
       }
-    },
-
-    desc: {
-      type: 'string',
-      notNull: true,
-      length: 100
     },
 
     ifNotExists: true

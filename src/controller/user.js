@@ -10,8 +10,8 @@ export const UserController = (function() {
   let service = undefined;
   
   return {
-    create: function(conn) {
-      service = UserService.create(conn);
+    inject: function(conn) {
+      service = UserService.inject(conn);
       return this;
     },
 
