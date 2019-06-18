@@ -46,7 +46,7 @@ export const AcaraRepository = (function() {
         user_name,
         room_name
         FROM acara_detail
-        WHERE acara_name LIKE %${name}%
+        WHERE name LIKE '%${name}%' 
         AND status = 1`;
 
       return queryDB(query);
@@ -71,7 +71,7 @@ export const AcaraRepository = (function() {
         end_time,
         status,
         acara_detail.desc,
-        room_name,
+        room_name
         FROM acara_detail
         WHERE user_id = ${userId}`;
 

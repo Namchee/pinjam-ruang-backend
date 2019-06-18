@@ -27,7 +27,7 @@ export const AcaraService = (function() {
     find: function(params) {
       if (params && Object.keys(params).length !== 0) {
         if (params.name) {
-          return repository.findAcaraByName(params.id) 
+          return repository.findAcaraByName(params.name) 
             .then(res => toDataArray(res))
             .catch(err => {
               throw err;

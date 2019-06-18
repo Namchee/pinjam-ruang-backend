@@ -3,6 +3,7 @@ export default class Acara {
     this.id = data.id;
     this.start_time = data.start_time;
     this.end_time = data.end_time;
+    this.name = data.name;
     this.status = data.status;
     this.desc = data.desc;
     this.user_id = data.user_id;
