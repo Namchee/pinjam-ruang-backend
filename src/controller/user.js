@@ -16,10 +16,7 @@ export const UserController = (function() {
     },
 
     findAllUsers: (req, res, next) => {
-      return service.findAllUsers()
-        .then(res => {
-          console.log(res);
-        });
+      
     }
   };
 })();

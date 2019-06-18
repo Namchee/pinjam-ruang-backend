@@ -3,7 +3,6 @@ import express from 'express';
 import logger from 'morgan';
 import { router as routes } from './routes/index';
 import { errorHandler, catch404 } from './routes/error';
-import { TokenProcessor } from './helpers/token';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 
