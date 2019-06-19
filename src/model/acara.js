@@ -1,14 +1,14 @@
-export default class Acara {
+export class Acara {
   constructor(data) {
     this.id = data.id;
-    this.start_time = data.start_time;
-    this.end_time = data.end_time;
+    this.startTime = new Date(data.start_time).toISOString();
+    this.endTime = new Date(data.end_time).toISOString();
     this.name = data.name;
     this.status = data.status;
     this.desc = data.desc;
-    this.user_id = data.user_id;
-    this.room_id = data.room_id;
-    this.user_name = data.user_name;
-    this.room_name = data.room_name;
+    this.userId = data.user_id;
+    this.roomId = data.room_id;
+    this.userName = data.user_name;
+    this.roomName = data.room_name;
   }
 }

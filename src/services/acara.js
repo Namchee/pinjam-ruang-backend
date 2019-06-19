@@ -1,8 +1,14 @@
+import Joi from '@hapi/joi';
+
 import { AcaraRepository } from './../repository/acara';
-import Acara from './../model/acara';
+import { RoomRepository } from './../repository/room';
+import { createAcaraSchema, deleteAcaraSchema, updateAcaraSchema, changeAcaraStatusSchema } from './../schemas/acara';
+import { Acara } from './../model/acara';
 
 export const AcaraService = (function() {
-  let repository = undefined;
+  let acaraRepository = undefined;
+  let roomRepository = undefined;
+  let userRepository = undefined;
 
   const toDTO = function(data) {
     return new Acara(data);
@@ -18,31 +24,47 @@ export const AcaraService = (function() {
     return arr;
   };
 
+  const validate = function(data, schema) {
+    return new Promise((resolve, reject) => {
+      Joi.validate(data, schema, (err, res) => {
+        if (err) {
+          err.statusCode = 422;
+          reject(err);
+        }
+
+        resolve(res);
+      });
+    });
+  };
+
   return {
     inject: function(conn) {
-      repository = AcaraRepository.inject(conn);
+      acaraRepository = AcaraRepository.inject(conn);
       return this;
     },
 
     find: function(params) {
       if (params && Object.keys(params).length !== 0) {
         if (params.name) {
-          return repository.findAcaraByName(params.name) 
+          return acaraRepository.findAcaraByName(params.name) 
             .then(res => toDataArray(res))
             .catch(err => {
               throw err;
             });
         } else if (params.userId) {
-          return repository.findUserAcara(params.userId)
+          return acaraRepository.findUserAcara(params.userId)
             .then(res => toDataArray(res))
             .catch(err => {
               throw err;
             });
         } else {
-          throw new Error('Invalid parameters');
+          const error = new Error('Invalid parameters');
+          error.statusCode = 422;
+
+          throw error;
         }
       } else {
-        return repository.findAllAcara()
+        return acaraRepository.findAllAcara()
           .then(res => toDataArray(res))
           .catch(err => {
             throw err;
@@ -51,7 +73,7 @@ export const AcaraService = (function() {
     },
 
     get: function(id) {
-      return repository.getAcara(id)
+      return acaraRepository.getAcara(id)
         .then(res => toDataArray(res))
         .catch(err => {
           throw err;
@@ -59,9 +81,36 @@ export const AcaraService = (function() {
     },
 
     create: function(params) {
-      return repository.create(params)
-        .then()
-        .catch();
+      return validate(params, createAcaraSchema)
+        .then(() => )
+        .then(() => acaraRepository.createAcara(params))
+        .catch(err => {
+          throw err;
+        });
+    },
+
+    delete: function(params) {
+      return validate(params, deleteAcaraSchema)
+        .then(() => acaraRepository.deleteAcara(params.id))
+        .catch(err => {
+          throw err;
+        });
+    },
+
+    update: function(params) {
+      return validate(params, updateAcaraSchema)
+        .then(() => acaraRepository.updateAcara(params))
+        .catch(err => {
+          throw err;
+        });
+    },
+
+    changeStatus: function(params) {
+      return validate(params, changeAcaraStatusSchema)
+        .then(() => acaraRepository.changeAcaraStatus(params.id, params.status))
+        .catch(err => {
+          throw err;
+        });
     }
   };
 })();

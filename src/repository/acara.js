@@ -1,9 +1,9 @@
-export const AcaraRepository = (function() {
+export const AcaraRepository = (function () {
   let connection = undefined;
 
-  const queryDB = function(query) {
+  const queryDB = function (query, params) {
     return new Promise((resolve, reject) => {
-      connection.query(query, (err, res) => {
+      connection.query(query, params, (err, res) => {
         if (err) {
           reject(err);
         }
@@ -13,145 +13,196 @@ export const AcaraRepository = (function() {
     });
   };
 
+  const findID = [
+    'id',
+    'name',
+    'start_time',
+    'end_time',
+    'status',
+    'desc',
+    'user_name',
+    'room_name',
+  ];
+
   return {
-    inject: function(conn) {
+    inject: function (conn) {
       connection = conn;
       return this;
     },
 
-    findAllAcara: function() {
+    findAllAcara: function () {
       const query = `SELECT 
-        id,
-        name,
-        start_time,
-        end_time,
-        status,
-        acara_detail.desc,
-        user_name,
-        room_name
+        ??, ??, ??, ??, ??, ??, ??, ??
         FROM acara_detail
-        WHERE status = 1`;
+        WHERE ?? = ?`;
 
-      return queryDB(query);
+      const params = [
+        ...findID, 
+        'status', 1,
+      ];
+
+      return queryDB(query, params);
     },
 
-    findAcaraByName: function(name) {
+    findAcaraByName: function (name) {
       const query = `SELECT 
-        id,
-        name,
-        start_time,
-        end_time,
-        status,
-        acara_detail.desc,
-        user_name,
-        room_name
+        ??, ??, ??, ??, ??, ??, ??, ??
         FROM acara_detail
-        WHERE name LIKE '%${name}%' 
-        AND status = 1`;
+        WHERE ?? LIKE ?
+        AND ?? = ?`;
 
-      return queryDB(query);
+      const params = [
+        ...findID, 
+        'name', ('%' + name + '%'), 
+        'status', 1,
+      ];
+
+      return queryDB(query, params);
     },
 
-    findConflictingAcara: function(startTime, endTime, roomId) {
+    findConflictingAcara: function (startTime, endTime, roomId) {
       const query = `SELECT
-        COUNT(id)
+        COUNT(??)
         FROM acara_detail
-        WHERE (start_time < ${endTime} OR end_time > ${startTime})
-        AND room_id = ${roomId} AND status = 1
-        GROUP BY id`;
+        WHERE (?? < ? OR ?? > ?)
+        AND ?? = ? AND ?? = ?
+        GROUP BY ?`;
 
-      return queryDB(query);
+      const params = [
+        'id',
+        'start_time', endTime,
+        'end_time', startTime,
+        'room_id', roomId,
+        'status', 1,
+        'id',
+      ];
+
+      return queryDB(query, params);
     },
 
-    findUserAcara: function(userId) {
+    findUserAcara: function (userId) {
       const query = `SELECT
-        id,
-        name,
-        start_time,
-        end_time,
-        status,
-        acara_detail.desc,
-        room_name
+        ??, ??, ??, ??, ??, ??, ??
         FROM acara_detail
-        WHERE user_id = ${userId}`;
+        WHERE ?? = ?`;
 
-      return queryDB(query);
+      const params = [
+        ...findID, 
+        'user_id', userId
+      ];
+
+      return queryDB(query, params);
     },
 
     getAcara: function(id, status = undefined) {
       let query = `SELECT
-        id,
-        name,
-        start_time,
-        end_time,
-        acara_detail.desc,
-        user_id,
-        user_name,
-        room_id
+        ??, ??, ??, ??, ??, ??, ??, ??
         FROM acara_detail
         WHERE id = ${id}`;
-      
+
+      const params = [
+        'id',
+        'name',
+        'start_time',
+        'end_time',
+        'desc',
+        'user_id',
+        'user_name',
+        'room_id',
+        'id', id,
+      ];
+
       if (status) {
-        query += ` AND status = ${status}`;
+        query += ' AND ?? = ?';
+        params.push('status', status);
       }
 
-      return queryDB(query);
+      return queryDB(query, params);
     },
 
     createAcara: function(acaraInfo) {
       const query = `INSERT INTO acara
-        (
-          start_time,
-          end_time,
-          name,
-          status,
-          desc,
-          user_id,
-          room_id
-        )
+        (??, ??, ??, ??, ??, ??, ??)
         VALUES (
-          ${acaraInfo.startTime},
-          ${acaraInfo.endTime},
-          ${acaraInfo.name},
-          ${acaraInfo.status},
-          ${acaraInfo.desc},
-          ${acaraInfo.userId},
-          ${acaraInfo.roomId}
+          STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
+          STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
+          ?,
+          ?,
+          ?,
+          ?,
+          ?
         )`;
 
-      return queryDB(query);
+      const params = [
+        'start_time',
+        'end_time',
+        'name',
+        'status',
+        'desc',
+        'user_id',
+        'room_id',
+        acaraInfo.startTime,
+        acaraInfo.endTime,
+        acaraInfo.name,
+        acaraInfo.status,
+        acaraInfo.desc,
+        acaraInfo.userId,
+        acaraInfo.roomId,
+      ];
+
+      return queryDB(query, params);
     },
 
     deleteAcara: function(id) {
       const query = `DELETE FROM acara
-        WHERE id = ${id}`;
+        WHERE ?? = ?`;
 
-      return queryDB(query);
+      const params = [
+        'id', id,
+      ];
+
+      return queryDB(query, params);
     },
 
-    updateAcara: function(id, acaraInfo) {
+    updateAcara: function(acaraInfo) {
       const query = `UPDATE acara
         SET
-          name = ${acaraInfo.name}
-          start_time = ${acaraInfo.start_time}
-          end_time = ${acaraInfo.end_time}
-          status = 0
-          desc = ${acaraInfo.desc}
-          user_id = ${acaraInfo.user_id}
-          room_id = ${acaraInfo.room_id}
-        WHERE id = ${id}`;
+          ?? = ?,
+          ?? = STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
+          ?? = STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
+          ?? = ?,
+          ?? = ?,
+          ?? = ?,
+          ?? = ?
+        WHERE ?? = ?`;
 
-      return queryDB(query);
+      const params = [
+        'name', acaraInfo.name,
+        'start_time', acaraInfo.startTime,
+        'end_time', acaraInfo.endTime,
+        'status', acaraInfo.status,
+        'desc', acaraInfo.desc,
+        'user_id', acaraInfo.userId,
+        'room_id', acaraInfo.roomId,
+        'id', acaraInfo.id,
+      ];
+
+      return queryDB(query, params);
     },
 
-    changeAcaraStatus: function(id, status) {
+    changeAcaraStatus: function (id, status) {
       const query = `UPDATE acara
         SET
-          status = ${status}
+          ?? = ?
         WHERE
-          id = ${id}`;
+          ?? = ?`;
 
-      return queryDB(query);
+      const params = [
+        'status', status,
+        'id', id,
+      ];
+
+      return queryDB(query, params);
     },
   };
 })();

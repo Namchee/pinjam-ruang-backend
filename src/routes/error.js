@@ -3,7 +3,7 @@ export function catch404(req, res, next) {
 }
 
 export function errorHandler(err, req, res, next) {
-  return res.status(err.status || 404)
+  return res.status(err.statusCode || 404)
     .json({
       status: false,
       data: null,

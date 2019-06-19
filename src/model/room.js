@@ -1,6 +1,6 @@
-export default class Room {
-  constructor(id, name) {
-    this.id = id;
-    this.name = name;
+export class Room {
+  constructor(data) {
+    this.id = data.id;
+    this.name = data.name;
   }
 }
