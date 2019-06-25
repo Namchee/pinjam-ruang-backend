@@ -15,11 +15,11 @@ export const AcaraController = (function() {
     return err;
   };
 
-  const handleSuccess = function(res) {
+  const handleSuccess = function(data) {
     return {
       status: true,
       message: null,
-      data: res,
+      data,
     };
   };
 
@@ -31,72 +31,48 @@ export const AcaraController = (function() {
 
     findAcara: (req, res, next) => {
       service.find(req.params)
-        .then(result => {
-          return res.status(200)
-            .json(handleSuccess(result));
-        })
-        .catch(err => {
-          return next(handleError(err));
-        });
+        .then(result => res.status(200)
+          .json(handleSuccess(result)))
+        .catch(err => next(handleError(err)));
     },
 
     getAcaraForEdit: (req, res, next) => {
-      service.get(req.params.id)
-        .then(result => {
-          return res.status(200)
-            .json(handleSuccess(result));
-        })
-        .catch(err => {
-          return next(handleError(err));
-        });
+      service.get(req.params)
+        .then(result => res.status(200)
+          .json(handleSuccess(result)))
+        .catch(err => next(handleError(err)));
     },
 
     createAcara: (req, res, next) => {
       req.body['status'] = 1;
 
       service.create(req.body)
-        .then(result => {
-          return res.status(200)
-            .send(handleSuccess(result));
-        })
-        .catch(err => {
-          return next(handleError(err));
-        });
+        .then(result => res.status(200)
+          .send(handleSuccess(result)))
+        .catch(err => next(handleError(err)));
     },
 
     deleteAcara: (req, res, next) => {
-      service.delete(req.body)
-        .then(result => {
-          return res.status(200)
-            .json(handleSuccess(result));
-        })
-        .catch(err => {
-          return next(handleError(err));
-        });
+      service.delete(req.body, req.auth)
+        .then(result => res.status(200)
+          .json(handleSuccess(result)))
+        .catch(err => next(handleError(err)));
     },
 
     updateAcaraInfo: (req, res, next) => {
       req.body['status'] = 1; // test mode
 
-      service.update(req.body)
-        .then(result => {
-          return res.status(200)
-            .send(handleSuccess(result));
-        })
-        .catch(err => {
-          return next(handleError(err));
-        });
+      service.update(req.body, req.auth)
+        .then(result => res.status(200)
+          .json(handleSuccess(result)))
+        .catch(err => next(handleError(err)));
     },
 
     changeAcaraStatus: (req, res, next) => {
       service.changeStatus(req.body)
-        .then(result => {
-          return res.status(200)
-            .send(handleSuccess(result));
-        })
-        .catch(err => {
-          return next(handleError(err));
-        });
-    }
+        .then(result => res.status(200)
+          .json(handleSuccess(result)))
+        .catch(err => next(handleError(err)));
+    },
   };
 })();

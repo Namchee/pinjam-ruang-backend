@@ -32,7 +32,7 @@ export const RoomRepository = (function() {
       return queryDB(query, params);
     },
 
-    findByName: function(name) {
+    findByName: function({ name }) {
       const query = `
         SELECT
           ??
@@ -42,18 +42,34 @@ export const RoomRepository = (function() {
           ?? = ?
       `;
 
-      const params = ['name', 'name', name,];
+      const params = ['name', 'name', `%${name}%`,];
+
+      return queryDB(query, params);
+    },
+
+    findById: function({ id }) {
+      const query = `
+        SELECT
+          ??
+        FROM
+          room
+        WHERE
+          ?? = ?
+      `;
+
+      const params = ['name', 'id', id,];
 
       return queryDB(query, params);
     },
 
     createRoom: function({ name }) {
       const query = `
-        INSERT INTO room
+        INSERT INTO 
+          room
         (??)
-        VALUES
-        (?)
-      `;
+        VALUES (
+          ?
+        )`;
 
       const params = ['name', name,];
 
@@ -62,7 +78,8 @@ export const RoomRepository = (function() {
 
     updateRoom: function({ id, name }) {
       const query = `
-        UPDATE room
+        UPDATE 
+          room
         SET
           ?? = ?
         WHERE
@@ -76,7 +93,8 @@ export const RoomRepository = (function() {
 
     deleteRoom: function({ id }) {
       const query = `
-        DELETE FROM room
+        DELETE FROM 
+          room
         WHERE
           ?? = ?
       `;
@@ -84,6 +102,20 @@ export const RoomRepository = (function() {
       const params = ['id', id,];
 
       return queryDB(params, query);
+    },
+
+    exist: function({ id }) {
+      const query = `
+        SELECT
+          COUNT(??) as jml
+        FROM
+          room
+        WHERE
+          ?? = ?`;
+
+      const params = ['id', 'id', id,];
+
+      return queryDB(query, params);
     }
   };
 })();

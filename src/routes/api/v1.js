@@ -1,18 +1,16 @@
 import express from 'express';
-import { createConnection } from './../../helpers/connection';
-import { UserController } from './../../controller/user';
-import { AcaraController } from './../../controller/acara';
 
 const router = express.Router();
 
-const userController = UserController.inject(createConnection());
-const acaraController = AcaraController.inject(createConnection());
+router.use('')
 
 router.get('/get_user', userController.findAllUsers);
 router.get('/get_acara', acaraController.findAcara);
 router.get('/get_acara/:name', acaraController.findAcara);
 router.get('/get_my_acara/:userId', acaraController.findAcara);
 router.get('/edit_acara/:id', acaraController.getAcaraForEdit);
+
+router.get('/test_gan/:id', acaraController.checkExistence);
 
 router.post('/create_acara', acaraController.createAcara);
 

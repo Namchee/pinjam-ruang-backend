@@ -13,7 +13,7 @@ export const AcaraRepository = (function () {
     });
   };
 
-  const findID = [
+  const commonParams = [
     'id',
     'name',
     'start_time',
@@ -25,34 +25,40 @@ export const AcaraRepository = (function () {
   ];
 
   return {
-    inject: function (conn) {
+    inject: function(conn) {
       connection = conn;
       return this;
     },
 
-    findAllAcara: function () {
-      const query = `SELECT 
-        ??, ??, ??, ??, ??, ??, ??, ??
-        FROM acara_detail
-        WHERE ?? = ?`;
+    findAll: function() {
+      const query = `
+        SELECT 
+          ??, ??, ??, ??, ??, ??, ??, ??
+        FROM 
+          acara_detail
+        WHERE 
+          ?? = ?`;
 
       const params = [
-        ...findID, 
+        ...commonParams, 
         'status', 1,
       ];
 
       return queryDB(query, params);
     },
 
-    findAcaraByName: function (name) {
-      const query = `SELECT 
-        ??, ??, ??, ??, ??, ??, ??, ??
-        FROM acara_detail
-        WHERE ?? LIKE ?
-        AND ?? = ?`;
+    findByName: function({ name }) {
+      const query = `
+        SELECT 
+          ??, ??, ??, ??, ??, ??, ??, ??
+        FROM 
+          acara_detail
+        WHERE 
+          ?? LIKE ?
+          AND ?? = ?`;
 
       const params = [
-        ...findID, 
+        ...commonParams, 
         'name', ('%' + name + '%'), 
         'status', 1,
       ];
@@ -60,13 +66,19 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    findConflictingAcara: function (startTime, endTime, roomId) {
-      const query = `SELECT
-        COUNT(??)
-        FROM acara_detail
-        WHERE (?? < ? OR ?? > ?)
-        AND ?? = ? AND ?? = ?
-        GROUP BY ?`;
+    findConflictingAcara: function({ startTime, endTime, roomId }) {
+      const query = `
+        SELECT
+          COUNT(??) as conflicts
+        FROM 
+          acara_detail
+        WHERE
+          (?? < STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000') 
+          OR ?? > STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'))
+          AND ?? = ? 
+          AND ?? = ?
+        GROUP BY 
+          ?`;
 
       const params = [
         'id',
@@ -80,25 +92,36 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    findUserAcara: function (userId) {
-      const query = `SELECT
-        ??, ??, ??, ??, ??, ??, ??
-        FROM acara_detail
-        WHERE ?? = ?`;
+    findUserAcara: function({ id, status }) {
+      let query = `
+        SELECT
+          ??, ??, ??, ??, ??, ??, ??
+        FROM 
+          acara_detail
+        WHERE 
+          ?? = ?`;
 
       const params = [
-        ...findID, 
-        'user_id', userId
+        ...commonParams, 
+        'user_id', id
       ];
+
+      if (status) {
+        query += ' AND ?? =  ?';
+        params.push('status', status);
+      }
 
       return queryDB(query, params);
     },
 
-    getAcara: function(id, status = undefined) {
-      let query = `SELECT
-        ??, ??, ??, ??, ??, ??, ??, ??
-        FROM acara_detail
-        WHERE id = ${id}`;
+    getAcara: function({ id }) {
+      const query = `
+        SELECT
+          ??, ??, ??, ??, ??, ??, ??, ??
+        FROM 
+          acara_detail
+        WHERE 
+          ?? = ?`;
 
       const params = [
         'id',
@@ -112,16 +135,13 @@ export const AcaraRepository = (function () {
         'id', id,
       ];
 
-      if (status) {
-        query += ' AND ?? = ?';
-        params.push('status', status);
-      }
-
       return queryDB(query, params);
     },
 
     createAcara: function(acaraInfo) {
-      const query = `INSERT INTO acara
+      const query = `
+        INSERT INTO 
+          acara
         (??, ??, ??, ??, ??, ??, ??)
         VALUES (
           STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
@@ -153,9 +173,12 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    deleteAcara: function(id) {
-      const query = `DELETE FROM acara
-        WHERE ?? = ?`;
+    deleteAcara: function({ id }) {
+      const query = `
+        DELETE FROM 
+          acara
+        WHERE 
+          ?? = ?`;
 
       const params = [
         'id', id,
@@ -165,7 +188,9 @@ export const AcaraRepository = (function () {
     },
 
     updateAcara: function(acaraInfo) {
-      const query = `UPDATE acara
+      const query = `
+        UPDATE
+          acara
         SET
           ?? = ?,
           ?? = STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
@@ -174,7 +199,8 @@ export const AcaraRepository = (function () {
           ?? = ?,
           ?? = ?,
           ?? = ?
-        WHERE ?? = ?`;
+        WHERE 
+          ?? = ?`;
 
       const params = [
         'name', acaraInfo.name,
@@ -190,7 +216,7 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    changeAcaraStatus: function (id, status) {
+    changeAcaraStatus: function(acaraInfo) {
       const query = `UPDATE acara
         SET
           ?? = ?
@@ -198,9 +224,23 @@ export const AcaraRepository = (function () {
           ?? = ?`;
 
       const params = [
-        'status', status,
-        'id', id,
+        'status', acaraInfo.status,
+        'id', acaraInfo.id,
       ];
+
+      return queryDB(query, params);
+    },
+
+    exist: function({ id }) {
+      const query = `
+        SELECT
+          COUNT(??) as jml
+        FROM
+          acara
+        WHERE
+          ?? = ?`;
+
+      const params = ['id', 'id', id,];
 
       return queryDB(query, params);
     },

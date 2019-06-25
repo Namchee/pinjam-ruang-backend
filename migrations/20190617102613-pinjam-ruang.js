@@ -59,10 +59,10 @@ function createUserTable(db) {
       password: {
         type: 'string',
         notNull: true,
-        length: 56
+        length: 60
       },
 
-      isAdmin: {
+      is_admin: {
         type: 'boolean',
         notNull: true
       }
@@ -152,7 +152,7 @@ function insertDummyUser(db) {
     'name',
     'email',
     'password',
-    'isAdmin'
+    'is_admin'
   ], [
     'namchee', 
     'Cristopher Namchee', 
@@ -165,7 +165,7 @@ function insertDummyUser(db) {
         'name',
         'email',
         'password',
-        'isAdmin'
+        'is_admin'
       ], [
         'chez14',
         'Gunawan Christanto',

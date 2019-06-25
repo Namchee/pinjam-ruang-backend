@@ -42,7 +42,7 @@ export const RoomService = (function() {
     },
 
     find: function(params) {
-      if (params && Object.keys(params).length !== 0) {
+      if (params && Object.keys(params).length === 1) {
         if (params.name) {
           return repository.findByName(params.name)
             .then(res => toDataArray(res))
@@ -55,12 +55,17 @@ export const RoomService = (function() {
 
           throw err;
         }
-      } else {
+      } else if (params && Object.keys(params).length === 0) {
         return repository.findAll()
           .then(res => toDataArray(res))
           .catch(err => {
             throw err;
           });
+      } else {
+        const err = new Error('Invalid parameters');
+        err.statusCode = 422;
+
+        throw err;
       }
     },
 

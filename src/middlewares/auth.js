@@ -16,37 +16,53 @@ export default {
       const { err, res: result } = await asyncWrapper(tp.verifyToken(token, sync));
       if (err) {
         req.err = 'Invalid Token';
-        next(401);
+        next(err);
       }
 
       if (res.status == 2) {
-        req.refresh = true;
-        req.token = token;
+        return res.status(401)
+          .json({
+            status: false,
+            data: null,
+            message: 'Token Expired',
+          });
       } else {
         req.auth = result;
       }
 
       next();
     } else {
-      next(401);
+      const err = new Error('Invalid token');
+      err.statusCode = 401;
+
+      next(err);
     }
   },
 
   sendRefresh: async (req, res, next) => {
-    if (!req.refresh) {
-      next();
-    }
-
     const { err, res: result } = await asyncWrapper(tp.refreshToken(req.token));
     if (err) {
-      next(500);
+      next(err);
     }
 
     return res.status(400)
-      .send({
+      .json({
         status: false,
         message: 'Token Refreshed',
         data: result,
       });
   },
+
+  adminAuth: (req, res, next) => {
+    if (!req.auth.isAdmin) {
+      return res.status(403)
+        .json({
+          status: false,
+          data: null,
+          message: 'Access denied',
+        });
+    }
+
+    next();
+  }
 };
