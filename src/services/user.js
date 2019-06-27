@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import Joi from '@hapi/joi';
 
 import { UserRepository } from './../repository/user';
-import { loginSchema, createUserSchema, updateInsensitiveDataSchema, adminCredentials, updatePasswordSchema, powerUpdateSchema, deleteUserSchema } from './../schemas/user';
+import { loginSchema, createUserSchema, updateInfoSchema, adminCredentials, updatePasswordSchema, powerUpdateSchema, deleteUserSchema } from './../schemas/user';
 import User from './../model/user';
 
 export const UserService = (function() {
@@ -137,8 +137,8 @@ export const UserService = (function() {
         });
     },
 
-    updateInsensitive: function(params, auth) {
-      return validate(params, updateInsensitiveDataSchema)
+    updateInfo: function(params, auth) {
+      return validate(params, updateInfoSchema)
         .then(() => repository.findById(params.id))
         .then(res => {
           if (res.id !== auth.id) {

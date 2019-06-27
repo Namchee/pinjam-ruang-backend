@@ -13,7 +13,7 @@ export const createUserSchema = Joi.object().keys({
   isAdmin: Joi.boolean().required(),
 });
 
-export const updateInsensitiveDataSchema = Joi.object().keys({
+export const updateInfoSchema = Joi.object().keys({
   id: Joi.number().positive().required(),
   username: Joi.string().max(20).required(),
   name: Joi.string().max(50).required(),

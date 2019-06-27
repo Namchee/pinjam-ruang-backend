@@ -134,9 +134,18 @@ export const AcaraService = (function() {
         });
     },
 
-    get: function(params) {
+    get: function(params, auth) {
       return acaraRepository.getAcara(params)
-        .then(res => toDTO(res))
+        .then(res => { 
+          if (!auth.isAdmin && auth.id !== res.userId ) {
+            const err = new Error('Access denied');
+            err.statusCode = 403;
+
+            throw err;
+          }
+          
+          return toDTO(res);
+        })
         .catch(err => {
           throw err;
         });

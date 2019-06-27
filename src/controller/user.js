@@ -6,7 +6,7 @@
 
 import { UserService } from './../services/user';
 import { TokenProcessor } from './../helpers/token';
-import { getNextDay } from './../helpers/misc';
+import { getNextExpirationDate } from './../helpers/misc';
 
 export const UserController = (function() {
   let service = undefined;
@@ -37,6 +37,7 @@ export const UserController = (function() {
           const user = {
             id: result.id,
             isAdmin: result.isAdmin,
+            ip: req.header('x-forwarded-for') || req.connection.remoteAddress,
           };
 
           return {
@@ -46,7 +47,7 @@ export const UserController = (function() {
         })
         .then(({ user, token }) => {
           res.cookie('synchro', token.sync, { 
-            expires: getNextDay(), 
+            expires: getNextExpirationDate(), 
             httpOnly: true,
           });
 
@@ -61,28 +62,28 @@ export const UserController = (function() {
         .catch(err => next(handleError(err)));
     },
 
-    find: (req, res, next) => {
+    findUser: (req, res, next) => {
       service.find(req.params)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
-    create: (req, res, next) => {
+    createUser: (req, res, next) => {
       service.create(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
-    updateInsensitive: (req, res, next) => {
+    updateUserInfo: (req, res, next) => {
       service.updateInsensitive(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
-    updatePassword: (req, res, next) => {
+    updateUserPassword: (req, res, next) => {
       service.updatePassword(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
@@ -104,7 +105,7 @@ export const UserController = (function() {
           .json(handleSuccess(false)));
     },
     
-    delete: (req, res, next) => {
+    deleteUser: (req, res, next) => {
       service.delete(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))

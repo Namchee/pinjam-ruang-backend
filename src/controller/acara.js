@@ -37,7 +37,7 @@ export const AcaraController = (function() {
     },
 
     getAcaraForEdit: (req, res, next) => {
-      service.get(req.params)
+      service.get(req.params, req.auth)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));

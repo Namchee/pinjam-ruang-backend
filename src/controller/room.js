@@ -6,7 +6,7 @@
 
 import { RoomService } from './../services/room';
 
-export const AcaraController = (function() {
+export const RoomController = (function() {
   let service = undefined;
 
   const handleError = function(err) {

@@ -4,8 +4,8 @@
  * Author: Namchee
  */
 
-import tp from './../services/token';
-import { asyncWrapper } from './../services/misc';
+import { TokenProcessor } from './../helpers/token';
+import { asyncWrapper, getNextExpirationDate } from './../helpers/misc';
 
 export default {
   loginCheck: async (req, res, next) => {
@@ -13,13 +13,23 @@ export default {
     const sync = req.cookies.sync;
 
     if (token && sync) {
-      const { err, res: result } = await asyncWrapper(tp.verifyToken(token, sync));
-      if (err) {
-        req.err = 'Invalid Token';
-        next(err);
+      const { err, res: result } = await asyncWrapper(
+        TokenProcessor.verifyToken(
+          token,
+          sync
+        )
+      );
+
+      const ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
+
+      if (err || result.ip !== ip) {
+        const error = new Error('Invalid token');
+        error.statusCode = 401;
+
+        next(error);
       }
 
-      if (res.status == 2) {
+      if (result.status == 2) {
         return res.status(401)
           .json({
             status: false,
@@ -40,16 +50,28 @@ export default {
   },
 
   sendRefresh: async (req, res, next) => {
-    const { err, res: result } = await asyncWrapper(tp.refreshToken(req.token));
+    const { err, res: result } = await asyncWrapper(
+      TokenProcessor.refreshToken(
+        req.token
+      )
+    );
+
     if (err) {
       next(err);
     }
 
-    return res.status(400)
+    const { primary, sync } = result;
+
+    res.cookie('synchro', sync, { 
+      expires: getNextExpirationDate(),
+      httpOnly: true,
+    });
+
+    return res.status(200)
       .json({
-        status: false,
+        status: true,
         message: 'Token Refreshed',
-        data: result,
+        data: primary,
       });
   },
 

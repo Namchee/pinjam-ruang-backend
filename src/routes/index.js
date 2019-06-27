@@ -7,7 +7,7 @@
  */
 
 import express from 'express';
-// import auth from './../middlewares/auth';
+import auth from './../middlewares/auth';
 import { api } from './api';
 import { sanitize } from 'express-validator/filter';
 
