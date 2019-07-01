@@ -22,12 +22,12 @@ export const RoomRepository = (function() {
     findAll: function() {
       const query = `
         SELECT
-          ??
+          ??, ??
         FROM
           room
       `;
 
-      const params = ['name',];
+      const params = ['id', 'name', ];
 
       return queryDB(query, params);
     },
@@ -35,14 +35,14 @@ export const RoomRepository = (function() {
     findByName: function({ name }) {
       const query = `
         SELECT
-          ??
+          ??, ??
         FROM
           room
         WHERE
-          ?? = ?
+          ?? LIKE ?
       `;
 
-      const params = ['name', 'name', `%${name}%`,];
+      const params = ['id', 'name', 'name', `%${name}%`,];
 
       return queryDB(query, params);
     },
@@ -50,14 +50,14 @@ export const RoomRepository = (function() {
     findById: function({ id }) {
       const query = `
         SELECT
-          ??
+          ??, ??
         FROM
           room
         WHERE
           ?? = ?
       `;
 
-      const params = ['name', 'id', id,];
+      const params = ['id', 'name', 'id', id,];
 
       return queryDB(query, params);
     },
@@ -66,10 +66,10 @@ export const RoomRepository = (function() {
       const query = `
         INSERT INTO 
           room
-        (??)
+          (??)
         VALUES (
           ?
-        )`;
+        );`;
 
       const params = ['name', name,];
 
@@ -88,11 +88,12 @@ export const RoomRepository = (function() {
 
       const params = ['name', name, 'id', id,];
 
-      return queryDB(params, query);
+      return queryDB(query, params);
     },
 
     deleteRoom: function({ id }) {
       const query = `
+        
         DELETE FROM 
           room
         WHERE
@@ -101,7 +102,7 @@ export const RoomRepository = (function() {
 
       const params = ['id', id,];
 
-      return queryDB(params, query);
+      return queryDB(query, params);
     },
 
     exist: function({ id }) {
@@ -115,7 +116,7 @@ export const RoomRepository = (function() {
 
       const params = ['id', 'id', id,];
 
-      return queryDB(query, params);
+      return queryDB(query, params).then(res => res[0].jml > 0);
     }
   };
 })();
