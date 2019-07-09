@@ -1,263 +1,240 @@
-import Joi from '@hapi/joi';
+import { Promise } from 'bluebird';
 
-import { AcaraRepository } from './../repository/acara';
-import { RoomRepository } from './../repository/room';
+import { validateData } from './../helpers/misc';
+import { checkRoomExistence } from './room';
 import { createAcaraSchema, deleteAcaraSchema, updateAcaraSchema, changeAcaraStatusSchema, findConflictSchema } from './../schemas/acara';
 import { Acara } from './../model/acara';
-import { UserRepository } from '../repository/user';
 
-export const AcaraService = (function() {
-  let acaraRepository = undefined;
-  let roomRepository = undefined;
-  let userRepository = undefined;
+function hasRights(acara, auth) {
+  if (!auth.isAdmin && acara.user_id !== auth.id) {
+    const err = new Error('Access Denied');
+    err.statusCode = 403;
 
-  const toDTO = function(data) {
-    return new Acara(data);
-  };
+    throw err;
+  }
+}
 
-  const toDataArray = function(result) {
-    const arr = [];
+function toDTO(data) {
+  return new Acara(data);
+}
 
-    for (const data of result) {
-      arr.push(toDTO(data));
+function toDataArray(dataArray) {
+  const array = [];
+
+  for (const acara of dataArray) {
+    array.push(toDTO(acara));
+  }
+
+  return array;
+}
+
+function checkAcaraExistence(acaraRepository) {
+  return function(params) {
+    if (params && 
+      Object.keys(params).length === 1 && 
+      params.id) {
+      
+      return acaraRepository.exist(params)
+        .then(res => res[0].jml > 0)
+        .catch(err => {
+          throw err;
+        });
+    } else {
+      const err = new Error('Invalid parameters');
+      err.statusCode = 422;
+
+      throw err;
     }
-
-    return arr;
   };
+}
 
-  const validate = function(data, schema) {
-    return new Promise((resolve, reject) => {
-      Joi.validate(data, schema, (err, res) => {
-        if (err) {
-          err.statusCode = 422;
-          reject(err);
-        }
-
-        resolve(res);
-      });
-    });
-  };
-
-  const acaraExist = function(params) {
-    return acaraRepository.exist(params)
-      .then(res => res[0].jml)
-      .catch(err => {
-        throw err;
-      });
-  };
-
-  const roomExist = function(params) {
-    return roomRepository.exist(params)
-      .then(res => res[0].jml)
-      .catch(err => {
-        throw err;
-      });
-  };
-
-  const userExist = function(params) {
-    return userRepository.exist(params)
-      .then(res => res[0].jml)
-      .catch(err => {
-        throw err;
-      });
-  };
-
-  return {
-    inject: function(conn) {
-      roomRepository = RoomRepository.inject(conn);
-      userRepository = UserRepository.inject(conn);
-      acaraRepository = AcaraRepository.inject(conn);
-
-      return this;
-    },
-
-    find: function(params) {
-      if (params && Object.keys(params).length === 1) {
-        if (params.name) {
-          return acaraRepository.findAcaraByName(params) 
-            .then(res => toDataArray(res))
-            .catch(err => {
-              throw err;
-            });
-        } else if (params.userId) {
-          return acaraRepository.findUserAcara(params)
-            .then(res => toDataArray(res))
-            .catch(err => {
-              throw err;
-            });
-        } else {
-          const error = new Error('Invalid parameters');
-          error.statusCode = 422;
-
-          throw error;
-        }
-      } else if (params && 
-        Object.keys(params).length === 2 &&
-        params.userId &&
-        params.status
-      ) {
+export function findAcara(acaraRepository) {
+  return function(params) {
+    if (params && Object.keys(params).length === 1) {
+      if (params.name) {
+        return acaraRepository.findByName(params)
+          .then(res => toDataArray(res))
+          .catch(err => {
+            throw err;
+          });
+      } else if (params.userId) {
         return acaraRepository.findUserAcara(params)
           .then(res => toDataArray(res))
           .catch(err => {
             throw err;
           });
-      } else if (params && Object.keys(params).length === 0) {
-        return acaraRepository.findAllAcara()
-          .then(res => toDataArray(res))
-          .catch(err => {
-            throw err;
-          });
       } else {
-        const err = new Error('Invalid parameters');
-        err.statusCode = 422;
+        const error = new Error('Invalid parameters');
+        error.statusCode = 422;
 
-        throw err;
+        throw error;
       }
-    },
-
-    findConflicting: function(params) {
-      return validate(params, findConflictSchema)
-        .then(() => roomExist({ id: params.roomId }))
-        .then(res => {
-          if (!res) {
-            const err = new Error('Room doesn\'t exist');
-            err.statusCode = 404;
-
-            throw err;
-          }
-
-          return acaraRepository.findConflictingAcara(params);
-        })
-        .then(res => res[0].conflicts)
+    } else if (params &&
+      Object.keys(params).length === 2 &&
+      params.userId &&
+      params.status
+    ) {
+      return acaraRepository.findUserAcara(params)
+        .then(res => toDataArray(res))
         .catch(err => {
           throw err;
         });
-    },
-
-    get: function(params, auth) {
-      return acaraRepository.getAcara(params)
-        .then(res => { 
-          if (!auth.isAdmin && auth.id !== res.userId ) {
-            const err = new Error('Access denied');
-            err.statusCode = 403;
-
-            throw err;
-          }
-          
-          return toDTO(res);
-        })
+    } else if (params
+      && Object.keys(params).length === 0) {
+      return acaraRepository.findAll()
+        .then(res => toDataArray(res))
         .catch(err => {
           throw err;
         });
-    },
+    } else {
+      const err = new Error('Invalid parameters');
+      err.statusCode = 422;
 
-    create: function(params) {
-      return validate(params, createAcaraSchema)
-        .then(() => Promise.all([
-          roomExist({ id: params.roomId }),
-          userExist({ id: params.userId }),
-        ]))
-        .then(([room, user,]) => {
-          if (!room) {
-            const err = new Error('Room doesn\'t exist');
-            err.statusCode = 404;
-
-            throw err;
-          }
-
-          if (!user) {
-            const err = new Error('User doesn\'t exist');
-            err.statusCode = 404;
-
-            throw err;
-          }
-
-          return acaraRepository.createAcara(params);
-        })
-        .catch(err => {
-          throw err;
-        });
-    },
-
-    delete: function(params, auth) {
-      return validate(params, deleteAcaraSchema)
-        .then(() => Promise.all[
-          acaraExist({ id: params.id }),
-          acaraRepository.getAcara({ id: params.id })
-        ])
-        .then(([exist, owner,]) => {
-          if (!exist) {
-            const err = new Error('Acara doesn\'t exist');
-            err.statusCode = 422;
-
-            throw err;
-          }
-
-          if (!auth.isAdmin && owner.user_id !== auth.id) {
-            const err = new Error('Access denied');
-            err.statusCode = 403;
-
-            throw err;
-          }
-
-          return acaraRepository.deleteAcara(params);
-        })
-        .catch(err => {
-          throw err;
-        });
-    },
-
-    update: function(params, auth) {
-      return validate(params, updateAcaraSchema)
-        .then(() => Promise.all([
-          roomExist({ id: params.roomId }),
-          userExist({ id: params.userId }),
-          acaraRepository.getAcara({ id: params.id })
-        ]))
-        .then(([room, user, owner,]) => {
-          if (!room) {
-            const err = new Error('Room doesn\'t exist');
-            err.statusCode = 404;
-
-            throw err;
-          }
-
-          if (!user) {
-            const err = new Error('User doesn\'t exist');
-            err.statusCode = 404;
-
-            throw err;
-          }
-
-          if (!owner.isAdmin && owner.user_id !== auth.id) {
-            const err = new Error('Access denied');
-            err.statusCode = 403;
-
-            throw err;
-          }
-
-          return acaraRepository.updateAcara(params);
-        })
-        .catch(err => {
-          throw err;
-        });
-    },
-
-    changeStatus: function(params) {
-      return validate(params, changeAcaraStatusSchema)
-        .then(() => acaraExist({ id: params.id }))
-        .then(res => {
-          if (!res) {
-            const err = new Error('Invalid parameters');
-            err.statusCode = 422;
-
-            throw err;
-          }
-        })
-        .then(() => acaraRepository.changeAcaraStatus(params))
-        .catch(err => {
-          throw err;
-        });
-    },
+      throw err;
+    }
   };
-})();
+}
+
+export function findConflicts(acaraRepository, roomRepository) {
+  return function(params) {
+    return validateData(params, findConflictSchema)
+      .then(() => checkRoomExistence(roomRepository)({ id: params.id }))
+      .then(res => {
+        if (!res) {
+          const err = new Error('Room doesn\'t exist');
+          err.statusCode = 404;
+
+          throw err;
+        }
+
+        return acaraRepository.findConflicts(params);
+      })
+      .then(res => toDataArray(res))
+      .catch(err => {
+        throw err;
+      });
+  };
+}
+
+export function getAcara(acaraRepository) {
+  return function (params, auth) {
+    return acaraRepository.getAcara(params)
+      .then(res => {
+        const acara = res[0];
+
+        hasRights(acara, auth);
+
+        return toDTO(acara);
+      })
+      .catch(err => {
+        throw err;
+      });
+  };
+}
+
+export function createAcara(acaraRepository, roomRepository) {
+  return function(params) {
+    return validateData(params, createAcaraSchema)
+      .then(() => Promise.all([
+        checkRoomExistence(roomRepository)({ id: params.roomId }),
+        userExist({ id: params.userId }),
+      ]))
+      .then(([room, user,]) => {
+        if (!room) {
+          const err = new Error('Room doesn\'t exist');
+          err.statusCode = 404;
+
+          throw err;
+        }
+
+        if (!user) {
+          const err = new Error('User doesn\'t exist');
+          err.statusCode = 404;
+
+          throw err;
+        }
+
+        return acaraRepository.create(params);
+      })
+      .catch(err => {
+        throw err;
+      });
+  };
+}
+
+export function deleteAcara(acaraRepository) {
+  return function(params, auth) {
+    return validateData(params, deleteAcaraSchema)
+      .then(() => Promise.all[
+        checkAcaraExistence(acaraRepository)({ id: params.id }),
+        acaraRepository.getAcara({ id: params.id })
+      ])
+      .then(([exist, acara,]) => {
+        if (!exist) {
+          const err = new Error('Acara doesn\'t exist');
+          err.statusCode = 404;
+
+          throw err;
+        }
+
+        hasRights(acara[0], auth);
+
+        return acaraRepository.deleteAcara(params);
+      })
+      .catch(err => {
+        throw err;
+      });
+  };
+}
+
+export function updateAcara(acaraRepository, roomRepository) {
+  return function(params, auth) {
+    return validateData(params, updateAcaraSchema)
+      .then(() => Promise.all([
+        roomExist(roomRepository)({ id: params.roomId }),
+        userExist({ id: params.userId }),
+        acaraRepository.getAcara({ id: params.id })
+      ]))
+      .then(([room, user, acara,]) => {
+        if (!room) {
+          const err = new Error('Room doesn\'t exist');
+          err.statusCode = 404;
+
+          throw err;
+        }
+
+        if (!user) {
+          const err = new Error('User doesn\'t exist');
+          err.statusCode = 404;
+
+          throw err;
+        }
+
+        hasRights(acara[0], auth);
+        
+        return acaraRepository.updateAcara(params);
+      })
+      .catch(err => {
+        throw err;
+      });
+  };
+}
+
+export function changeAcaraStatus(acaraRepository) {
+  return function(params) {
+    return validateData(params, changeAcaraStatusSchema)
+      .then(() => checkAcaraExistence(acaraRepository)({ id: params.id }))
+      .then(res => {
+        if (!res) {
+          const err = new Error('Acara doesn\'t exist');
+          err.statusCode = 404;
+
+          throw err;
+        }
+      })
+      .then(() => acaraRepository.changeAcaraStatus(params))
+      .catch(err => {
+        throw err;
+      });
+  };
+}

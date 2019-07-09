@@ -44,6 +44,7 @@ module.exports = {
       'error',
       'as-needed'
     ],
-    'require-jsdoc' : 'off'
+    'require-jsdoc' : 'off',
+    'new-cap': 'off',
   }
 };

@@ -1,19 +1,11 @@
-export const AcaraRepository = (function () {
-  let connection = undefined;
+import { queryDB as queryWrapper } from './../helpers/database';
 
-  const queryDB = function (query, params) {
-    return new Promise((resolve, reject) => {
-      connection.query(query, params, (err, res) => {
-        if (err) {
-          reject(err);
-        }
-
-        resolve(res);
-      });
-    });
+export const AcaraRepository = function(connection) {
+  const queryDB = (query, params) => {
+    return queryWrapper(connection, query, params);
   };
 
-  const commonParams = [
+  const findParams = [
     'id',
     'name',
     'start_time',
@@ -25,63 +17,82 @@ export const AcaraRepository = (function () {
   ];
 
   return {
-    inject: function(conn) {
-      connection = conn;
-      return this;
-    },
-
     findAll: function() {
       const query = `
         SELECT 
           ??, ??, ??, ??, ??, ??, ??, ??
         FROM 
           acara_detail
-        WHERE 
-          ?? = ?`;
+        ORDER BY
+          ??`;
 
-      const params = [
-        ...commonParams, 
-        'status', 1,
-      ];
+      const params = [...findParams, 'id',];
 
       return queryDB(query, params);
     },
 
-    findByName: function({ name }) {
+    findByStatus: function({ status }) {
       const query = `
         SELECT 
           ??, ??, ??, ??, ??, ??, ??, ??
         FROM 
           acara_detail
-        WHERE 
-          ?? LIKE ?
-          AND ?? = ?`;
+        WHERE
+          ?? = ?
+        ORDER BY
+          ??`;
 
       const params = [
-        ...commonParams, 
-        'name', ('%' + name + '%'), 
-        'status', 1,
+        ...findParams, 
+        'status', 
+        status, 
+        'id',
       ];
 
       return queryDB(query, params);
     },
 
-    findConflictingAcara: function({ startTime, endTime, roomId }) {
+    findByName: function({ name, status }) {
+      let query = `
+        SELECT 
+          ??, ??, ??, ??, ??, ??, ??, ??
+        FROM 
+          acara_detail
+        WHERE 
+          ?? LIKE ?`;
+
+      const params = [
+        ...findParams, 
+        'name', `%${name}%`, 
+      ];
+
+      if (status) {
+        query += ' AND ?? = ?';
+        params.push('status', status);
+      }
+
+      query += ' ORDER BY ??';
+
+      params.push('id');
+
+      return queryDB(query, params);
+    },
+
+    findConflicts: function({ startTime, endTime, roomId }) {
       const query = `
         SELECT
-          COUNT(??) as conflicts
+          ??
         FROM 
           acara_detail
         WHERE
-          (?? < STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000') 
-          OR ?? > STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'))
+          (?? < ? OR ?? > ?)
           AND ?? = ? 
           AND ?? = ?
         GROUP BY 
           ?`;
 
       const params = [
-        'id',
+        'name',
         'start_time', endTime,
         'end_time', startTime,
         'room_id', roomId,
@@ -95,15 +106,15 @@ export const AcaraRepository = (function () {
     findUserAcara: function({ id, status }) {
       let query = `
         SELECT
-          ??, ??, ??, ??, ??, ??, ??
+          ??, ??, ??, ??, ??, ??, ??, ??
         FROM 
           acara_detail
         WHERE 
           ?? = ?`;
 
       const params = [
-        ...commonParams, 
-        'user_id', id
+        ...findParams,
+        'user_id', id,
       ];
 
       if (status) {
@@ -114,7 +125,7 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    getAcara: function({ id }) {
+    get: function({ id }) {
       const query = `
         SELECT
           ??, ??, ??, ??, ??, ??, ??, ??
@@ -138,20 +149,13 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    createAcara: function(acaraInfo) {
+    create: function(acaraInfo) {
       const query = `
         INSERT INTO 
           acara
-        (??, ??, ??, ??, ??, ??, ??)
-        VALUES (
-          STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
-          STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
-          ?,
-          ?,
-          ?,
-          ?,
-          ?
-        )`;
+          (??, ??, ??, ??, ??, ??, ??)
+        VALUES 
+          (?, ?, ?, ?, ?, ?, ?)`;
 
       const params = [
         'start_time',
@@ -173,7 +177,7 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    deleteAcara: function({ id }) {
+    delete: function({ id }) {
       const query = `
         DELETE FROM 
           acara
@@ -187,14 +191,14 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    updateAcara: function(acaraInfo) {
+    update: function(acaraInfo) {
       const query = `
         UPDATE
           acara
         SET
           ?? = ?,
-          ?? = STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
-          ?? = STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s+0000'),
+          ?? = ?,
+          ?? = ?,
           ?? = ?,
           ?? = ?,
           ?? = ?,
@@ -216,7 +220,7 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
 
-    changeAcaraStatus: function(acaraInfo) {
+    changeStatus: function({ id, status }) {
       const query = `UPDATE acara
         SET
           ?? = ?
@@ -224,8 +228,8 @@ export const AcaraRepository = (function () {
           ?? = ?`;
 
       const params = [
-        'status', acaraInfo.status,
-        'id', acaraInfo.id,
+        'status', status,
+        'id', id,
       ];
 
       return queryDB(query, params);
@@ -245,4 +249,4 @@ export const AcaraRepository = (function () {
       return queryDB(query, params);
     },
   };
-})();
+};

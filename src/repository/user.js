@@ -1,52 +1,44 @@
-export const UserRepository = (function() {
-  let connection = undefined;
+import { queryDB as queryWrapper } from './../helpers/misc';
 
-  const queryDB = function(query, params) {
-    return new Promise((resolve, reject) => {
-      connection.query(query, params, (err, res) => {
-        if (err) {
-          reject(err);
-        } 
-
-        resolve(res);
-      });
-    });
+export const UserRepository = function(connection) {
+  const queryDB = (query, params) => {
+    return queryWrapper(connection, query, params);
   };
 
-  const commonParams = [
+  const findParams = [
     'id',
-    'username',
     'name',
     'email',
     'is_admin',
   ];
 
   return {
-    inject: function(conn) {
-      connection = conn;
-      return this;
-    },
-
     findAll: function() {
       const query = `
         SELECT 
-          ??, ??, ??, ??, ?? 
+          ??, ??, ??, ??
         FROM 
-          user`;
+          user
+        ORDER BY
+          ??`;
 
-      return queryDB(query, commonParams);
+      const params = [...findParams, 'id',];
+
+      return queryDB(query, params);
     },
 
-    findByUsername: function({ username }) {
+    findByEmail: function({ email }) {
       const query = `
         SELECT  
-          ??, ??, ??, ??, ??
+          ??, ??, ??, ??
         FROM
           user
         WHERE
-          ?? LIKE ?`;
+          ?? LIKE ?
+        ORDER BY
+          ??`;
 
-      const params = [...commonParams, 'username', `%${username}%`,];
+      const params = [...findParams, 'email', `%${email}%`, 'id'];
 
       return queryDB(query, params);
     },
@@ -54,13 +46,15 @@ export const UserRepository = (function() {
     findByName: function({ name }) {
       const query = `
         SELECT  
-          ??, ??, ??, ??, ??
+          ??, ??, ??, ??
         FROM
           user
         WHERE
-          ?? LIKE ?`;
+          ?? LIKE ?
+        ORDER BY
+          ??`;
 
-      const params = [...commonParams, 'name', `%${name}%`,];
+      const params = [...findParams, 'name', `%${name}%`, 'id',];
 
       return queryDB(query, params);
     },
@@ -68,63 +62,37 @@ export const UserRepository = (function() {
     findById: function({ id }) {
       const query = `
         SELECT
-          ??, ??, ??, ??, ??
+          ??, ??, ??, ??
         FROM
           user
         WHERE
           ?? = ?`;
         
-      const params = [...commonParams, 'id', id,];
+      const params = [...findParams, 'id', id,];
 
       return queryDB(query, params);
     },
 
-    create: function(userInfo) {
+    create: function({ email, name, isAdmin }) {
       const query = `
         INSERT INTO user
-          (??, ??, ??, ??, ??)
+          (??, ??, ??)
         VALUES
-          (?, ?, ?, ?, ?)`;
+          (?, ?, ?)`;
       
       const params = [
-        'username',
-        'name',
-        'password',
         'email',
+        'name',
         'is_admin',
-        userInfo.username,
-        userInfo.name,
-        userInfo.password,
-        userInfo.email,
-        userInfo.isAdmin,
+        email,
+        name,
+        isAdmin,
       ];
 
       return queryDB(query, params);
     },
 
-    updateInsensitive: function(userInfo) {
-      const query = `
-        UPDATE
-          user
-        SET
-          ?? = ?
-          ?? = ?
-          ?? = ?
-        WHERE
-          ?? = ?
-      `;
-
-      const params = [
-        'username', userInfo.username,
-        'name', userInfo.name,
-        'email', userInfo.email,
-        'id', userInfo.id,
-      ];
-
-      return queryDB(query, params);
-    },
-
-    updatePassword: function(userInfo) {
+    updateRole: function({ id, isAdmin }) {
       const query = `
         UPDATE
           user
@@ -134,33 +102,8 @@ export const UserRepository = (function() {
           ?? = ?`;
 
       const params = [
-        'password', userInfo.password,
-        'id', userInfo.id,
-      ];
-
-      return queryDB(query, params);
-    },
-
-    powerUpdate: function(userInfo) {
-      const query = `
-        UPDATE 
-          user
-        SET
-          ?? = ?
-          ?? = ?
-          ?? = ?
-          ?? = ?
-          ?? = ?
-        WHERE
-          ?? = ?`;
-
-      const params = [
-        'username', userInfo.username,
-        'name', userInfo.name,
-        'password', userInfo.password,
-        'email', userInfo.email,
-        'is_admin', userInfo.isAdmin,
-        'id', userInfo.id,
+        'is_admin', isAdmin,
+        'id', id,
       ];
 
       return queryDB(query, params);
@@ -193,4 +136,4 @@ export const UserRepository = (function() {
       return queryDB(query, params);
     }
   };
-})();
+};

@@ -1,33 +1,22 @@
-export const RoomRepository = (function() {
-  let connection = undefined;
+import { queryDB as queryWrapper } from './../helpers/database';
 
-  const queryDB = function(query, params) {
-    return new Promise((resolve, reject) => {
-      connection.query(query, params, (err, res) => {
-        if (err) {
-          reject(err);
-        }
-
-        resolve(res);
-      });
-    });
+export const RoomRepository = function(connection) {
+  const queryDB = (query, params) => {
+    return queryWrapper(connection, query, params);
   };
 
   return {
-    inject: function(conn) {
-      connection = conn;
-      return this;
-    },
-
     findAll: function() {
       const query = `
         SELECT
           ??, ??
         FROM
           room
+        ORDER BY
+          ??
       `;
 
-      const params = ['id', 'name', ];
+      const params = ['id', 'name', 'id',];
 
       return queryDB(query, params);
     },
@@ -40,9 +29,11 @@ export const RoomRepository = (function() {
           room
         WHERE
           ?? LIKE ?
+        ORDER BY
+          ??
       `;
 
-      const params = ['id', 'name', 'name', `%${name}%`,];
+      const params = ['id', 'name', 'name', `%${name}%`, 'id',];
 
       return queryDB(query, params);
     },
@@ -62,7 +53,7 @@ export const RoomRepository = (function() {
       return queryDB(query, params);
     },
 
-    createRoom: function({ name }) {
+    create: function({ name }) {
       const query = `
         INSERT INTO 
           room
@@ -76,7 +67,7 @@ export const RoomRepository = (function() {
       return queryDB(query, params);
     },
 
-    updateRoom: function({ id, name }) {
+    update: function({ id, name }) {
       const query = `
         UPDATE 
           room
@@ -91,7 +82,7 @@ export const RoomRepository = (function() {
       return queryDB(query, params);
     },
 
-    deleteRoom: function({ id }) {
+    delete: function({ id }) {
       const query = `
         
         DELETE FROM 
@@ -116,7 +107,7 @@ export const RoomRepository = (function() {
 
       const params = ['id', 'id', id,];
 
-      return queryDB(query, params).then(res => res[0].jml > 0);
+      return queryDB(query, params);
     }
   };
-})();
+};

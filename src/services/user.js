@@ -1,9 +1,28 @@
-import bcrypt from 'bcrypt';
-import Joi from '@hapi/joi';
-
-import { UserRepository } from './../repository/user';
-import { loginSchema, createUserSchema, updateInfoSchema, adminCredentials, updatePasswordSchema, powerUpdateSchema, deleteUserSchema } from './../schemas/user';
+import { authenticationSchema, createUserSchema, updateInfoSchema, adminCredentials, updatePasswordSchema, powerUpdateSchema, deleteUserSchema } from './../schemas/user';
 import User from './../model/user';
+import OAuthClient from 'google-auth-library';
+
+function toDTO(data) {
+  return new User(data);
+}
+
+function toDataArray(data) {
+  const arr = [];
+
+  for (const user of data) {
+    arr.push(toDTO(user));
+  }
+
+  return arr;
+}
+
+export function authenticate(userRepository) {
+  const client = new OAuthClient(process.env.CLIENT_ID);
+
+  return function(params) {
+    
+  };
+}
 
 export const UserService = (function() {
   let repository = undefined;
@@ -65,7 +84,7 @@ export const UserService = (function() {
     },
 
     login: function(params) {
-      return validate(params, loginSchema)
+      return validate(params, authenticationSchema)
         .then(() => repository.findByUsername(params.username))
         .then(res => {
           if (comparePassword(params.password, res.password)) {

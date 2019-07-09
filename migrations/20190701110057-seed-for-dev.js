@@ -9,31 +9,23 @@ var seed;
   * This enables us to not have to rely on NODE_PATH.
   */
 
- function insertDummyUser(db) {
+function insertDummyUser(db) {
   return db.insert('user', [
-    'username',
     'name',
     'email',
-    'password',
-    'is_admin'
+    'is_admin',
   ], [
-    'namchee', 
-    'Cristopher Namchee', 
-    'cristophernamchee12@gmail.com', 
-    'test', 
+    'Cristopher Namchee',
+    'cristophernamchee12@gmail.com',
     false])
     .then(() => {
       db.insert('user', [
-        'username',
         'name',
         'email',
-        'password',
         'is_admin'
       ], [
-        'chez14',
         'Gunawan Christanto',
         'master@gmail.com',
-        'inijugatest',
         true
       ]);
     });

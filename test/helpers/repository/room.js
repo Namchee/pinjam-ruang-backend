@@ -1,18 +1,6 @@
-import { createConnection } from './../../../src/helpers/connection';
+import { createConnection, queryDB } from '../../../src/helpers/database'; 
 
 const connection = createConnection('dev');
-
-function queryDB(query, params) {
-  return new Promise((resolve, reject) => {
-    connection.query(query, params, (err, res) => {
-      if (err) {
-        reject(err);
-      }
-
-      resolve(res);
-    });
-  });
-}
 
 export function truncate() {
   const query = `
@@ -22,7 +10,7 @@ export function truncate() {
 
     SET FOREIGN_KEY_CHECKS = 1;`;
 
-  return queryDB(query);
+  return queryDB(connection, query);
 }
 
 export function seed() {
@@ -33,12 +21,11 @@ export function seed() {
     VALUES
       (?)`;
 
-  const params = ['name', '9121',];
+  const params1 = ['name', '9121',];
+  const params2 = ['name', '10316',];
 
-  return queryDB(query, params)
-    .then(() => {
-      params[1] = '10316';
-
-      return queryDB(query, params);
-    });
+  return Promise.all([
+    queryDB(connection, query, params1),
+    queryDB(connection, query, params2),
+  ]);
 }

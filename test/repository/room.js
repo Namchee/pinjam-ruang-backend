@@ -1,14 +1,14 @@
 import chai from 'chai';
 import sinon from 'sinon';
 
-import { createConnection } from '../../src/helpers/connection';
+import { createConnection } from '../../src/helpers/database';
 import { RoomRepository } from '../../src/repository/room';
 
 import { truncate, seed } from './../helpers/repository/room';
 
 const expect = chai.expect;
 
-const roomRepository = RoomRepository.inject(createConnection('dev'));
+const roomRepository = RoomRepository(createConnection('dev'));
 
 describe('findAll', function() {
   beforeEach(function() {
@@ -139,26 +139,28 @@ describe('exist', function() {
       .then(() => seed());
   });
 
-  it('should return true', async function() {
+  it('should return true because it exists in database', async function() {
     const spy = sinon.spy(roomRepository, 'exist');
     const expectedArgs = { id: 1 };
 
     const result = await roomRepository.exist(expectedArgs);
+    const processed = result[0].jml > 0;
 
-    expect(result).to.be.true;
+    expect(processed).to.be.true;
 
     spy.restore();
     sinon.assert.calledOnce(spy);
     sinon.assert.calledWith(spy, expectedArgs);
   });
 
-  it('should return false', async function() {
+  it('should return false because it doesn\'t exist in database', async function() {
     const spy = sinon.spy(roomRepository, 'exist');
     const expectedArgs = { id: 12903 };
 
     const result = await roomRepository.exist(expectedArgs);
+    const processed = result[0].jml > 0;
 
-    expect(result).to.be.false;
+    expect(processed).to.be.false;
 
     spy.restore();
     sinon.assert.calledOnce(spy);
@@ -168,7 +170,8 @@ describe('exist', function() {
 
 describe('createRoom', function() {
   beforeEach(function() {
-    return truncate();
+    return truncate()
+      .then(() => seed());
   });
 
   afterEach(function() {
@@ -176,26 +179,62 @@ describe('createRoom', function() {
       .then(() => seed());
   });
 
-  it('should insert room 9120', async function() {
+  it('should insert room 9122', async function() {
     const spy = sinon.spy(roomRepository, 'createRoom');
-    const expectedArgs = { name: '9120' };
+    const expectedArgs = { name: '9122' };
 
     await roomRepository.createRoom(expectedArgs);
 
     spy.restore();
 
-    const result = await roomRepository.findByName({ name: '9120' });
+    const result = await roomRepository.findByName({ name: '9122' });
 
     expect(result).to.eql([
       {
-        id: 1,
-        name: '9120',
+        id: 3,
+        name: '9122',
       }
     ]);
 
     sinon.assert.calledOnce(spy);
     sinon.assert.calledWith(spy, expectedArgs);
-  }); 
+  });
+
+  it('should be rejected because of duplication', async function() {
+    const spy = sinon.spy(roomRepository, 'createRoom');
+    const expectedArgs = { name: '10316' };
+
+    try {
+      await roomRepository.createRoom(expectedArgs);
+    } catch (err) {
+      spy.restore();
+
+      const errorNumber = err.errno;
+
+      expect(errorNumber).to.equal(1062);
+
+      sinon.assert.calledOnce(spy);
+      sinon.assert.calledWith(spy, expectedArgs);
+    }
+  });
+
+  it('should be rejected because name is too long', async function() {
+    const spy = sinon.spy(roomRepository, 'createRoom');
+    const expectedArgs = { name: 'DOOMED, YOU ARE DOOMED' };
+
+    try {
+      await roomRepository.createRoom(expectedArgs);
+    } catch (err) {
+      spy.restore();
+
+      const errorNumber = err.errno;
+
+      expect(errorNumber).to.equal(1406);
+
+      sinon.assert.calledOnce(spy);
+      sinon.assert.calledWith(spy, expectedArgs);
+    }
+  });
 });
 
 describe('updateRoom', function() {
@@ -232,7 +271,7 @@ describe('updateRoom', function() {
 
   it('shouldn\'t change anything', async function() {
     const spy = sinon.spy(roomRepository, 'updateRoom');
-    const expectedArgs = { id: 1000, name: '10317' };
+    const expectedArgs = { id: 1000, name: 'DOOMED' };
 
     await roomRepository.updateRoom(expectedArgs);
 
@@ -254,15 +293,51 @@ describe('updateRoom', function() {
     sinon.assert.calledOnce(spy);
     sinon.assert.calledWith(spy, expectedArgs);
   });
+
+  it('should be rejected because of duplication', async function() {
+    const spy = sinon.spy(roomRepository, 'updateRoom');
+    const expectedArgs = { id: 1, name: '10316', };
+
+    try {
+      await roomRepository.updateRoom(expectedArgs);
+    } catch (err) {
+      spy.restore();
+
+      const errorNumber = err.errno;
+
+      expect(errorNumber).to.equal(1062);
+
+      sinon.assert.calledOnce(spy);
+      sinon.assert.calledWith(spy, expectedArgs);
+    }
+  });
+
+  it('should be rejected because name is too long', async function() {
+    const spy = sinon.spy(roomRepository, 'updateRoom');
+    const expectedArgs = { id: 1, name: 'HAWHJIFHAIWFHJUIAF' };
+
+    try {
+      await roomRepository.updateRoom(expectedArgs);
+    } catch (err) {
+      spy.restore();
+
+      const errorNumber = err.errno;
+
+      expect(errorNumber).to.equal(1406);
+      
+      sinon.assert.calledOnce(spy);
+      sinon.assert.calledWith(spy, expectedArgs);
+    }
+  });
 });
 
 describe('deleteRoom', function() {
-  this.beforeEach(function() {
+  beforeEach(function() {
     return truncate()
       .then(() => seed());
   });
 
-  this.afterEach(function() {
+  afterEach(function() {
     return truncate() 
       .then(() => seed());
   });

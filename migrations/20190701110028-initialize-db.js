@@ -17,8 +17,9 @@ function createRoomTable(db) {
 
       name: {
         type: 'string',
+        unique: true,
         notNull: true,
-        length: 10
+        length: 5,
       }
     },
 
@@ -37,13 +38,6 @@ function createUserTable(db) {
         autoIncrement: true
       },
 
-      username: {
-        type: 'string',
-        notNull: true,
-        unique: true,
-        length: 20
-      },
-
       name: {
         type: 'string',
         notNull: true,
@@ -53,13 +47,8 @@ function createUserTable(db) {
       email: {
         type: 'string',
         notNull: true,
-        length: 50
-      },
-
-      password: {
-        type: 'string',
-        notNull: true,
-        length: 60
+        unique: true,
+        length: 254,
       },
 
       is_admin: {
@@ -96,19 +85,20 @@ function createAcaraTable(db) {
       name: {
         type: 'string',
         notNull: true,
-        length: 50
+        unique: true,
+        length: 50,
       },
 
       status: {
         type: 'int',
         notNull: true,
-        unsigned: true
+        unsigned: true,
       },
 
       desc: {
         type: 'string',
         notNull: true,
-        length: 100
+        length: 100,
       },
 
       user_id: {
@@ -123,7 +113,7 @@ function createAcaraTable(db) {
             onDelete: 'RESTRICT'
           },
           mapping: 'id'
-        }
+        },
       },
 
       room_id: {
@@ -138,7 +128,7 @@ function createAcaraTable(db) {
             onDelete: 'RESTRICT'
           },
           mapping: 'id'
-        }
+        },
       }
     },
 
