@@ -4,65 +4,46 @@
  * Author: Namchee
  */
 
-import { AcaraService } from './../services/acara';
+import { handleError, handleSuccess } from './../helpers/api';
 
-export const AcaraController = (function() {
-  let service = undefined;
-
-  const handleError = function(err) {
-    err.statusCode = err.statusCode || 500;
-
-    return err;
-  };
-
-  const handleSuccess = function(data) {
-    return {
-      status: true,
-      message: null,
-      data,
-    };
-  };
-
+/**
+ * Creates new Acara Controller
+ * 
+ * @param {object} service Acara service
+ * @return {object} Controller methods
+ */
+export function acaraController(service) {
   return {
-    inject: function(conn) {
-      service = AcaraService.inject(conn);
-      return this;
-    },
-
     findAcara: (req, res, next) => {
-      service.find(req.params)
+      service.findAcara(req.params)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
-    getAcaraForEdit: (req, res, next) => {
-      service.get(req.params, req.auth)
+    getAcara: (req, res, next) => {
+      service.getAcara(req.params, req.auth)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
     createAcara: (req, res, next) => {
-      req.body['status'] = 1;
-
-      service.create(req.body)
+      service.createAcara(req.body)
         .then(result => res.status(200)
           .send(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
     deleteAcara: (req, res, next) => {
-      service.delete(req.body, req.auth)
+      service.deleteAcara(req.body, req.auth)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
     updateAcaraInfo: (req, res, next) => {
-      req.body['status'] = 1; // test mode
-
-      service.update(req.body, req.auth)
+      service.updateAcara(req.body, req.auth)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
@@ -75,4 +56,4 @@ export const AcaraController = (function() {
         .catch(err => next(handleError(err)));
     },
   };
-})();
+}

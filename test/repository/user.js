@@ -285,7 +285,7 @@ describe('exist', function() {
   });
 });
 
-describe('createUser', function() {
+describe('create', function() {
   beforeEach(function() {
     return truncate()
       .then(() => seed());
@@ -297,14 +297,14 @@ describe('createUser', function() {
   });
 
   it('should create 1 new user', async function() {
-    const spy = sinon.spy(userRepository, 'createUser');
+    const spy = sinon.spy(userRepository, 'create');
     const expectedArgs = {
       email: 'test123@gmail.com',
       name: 'test',
       isAdmin: false,
     };
 
-    await userRepository.createUser(expectedArgs);
+    await userRepository.create(expectedArgs);
 
     spy.restore();
 
@@ -317,14 +317,14 @@ describe('createUser', function() {
         name: 'test',
         is_admin: 0,
       },
-    ])
+    ]);
 
     sinon.assert.calledOnce(spy);
     sinon.assert.calledWith(spy, expectedArgs);
   });
 
   it('should be rejected because email is too long', async function() {
-    const spy = sinon.spy(userRepository, 'createUser');
+    const spy = sinon.spy(userRepository, 'create');
     const expectedArgs = {
       email: 'kdfasfasfsasdflasbhflasd;fldhasfkhaskfhas;lfjh;ljashf;ldhs;fkldashflkhnasvojuwbhergih083qwhg0b9j0eb8ehbv-09d-asb9yhd-asbhj-yhf-ds9hbf-9dfshbf-d9fsyhd-fshb-d9fsbh9-dsbh902qh2qh2qhpvnewbvnaeiwhcvfjaucvfpr-ewhnvgr90aewhbv-[w9rhb-9aewhb v-rhawbv-aw9hb9-rhasw-b9hsb9-h-ashb',
       name: 'DOOMED',
@@ -332,7 +332,7 @@ describe('createUser', function() {
     };
 
     try {
-      await userRepository.createUser(expectedArgs);
+      await userRepository.create(expectedArgs);
     } catch (err) {
       spy.restore();
 
@@ -346,7 +346,7 @@ describe('createUser', function() {
   });
 
   it('should be rejected because name is too long', async function() {
-    const spy = sinon.spy(userRepository, 'createUser');
+    const spy = sinon.spy(userRepository, 'create');
     const expectedArgs = {
       email: 'DOOMED@doomedmail.com',
       name: 'kdfasfasfsasdflasbhflasd;fldhasfkhaskfhas;lfjh;ljashf;ldhs;fkldashflkhnasvojuwbhergih083qwhg0b9j0eb8ehbv-09d-asb9yhd-asbhj-yhf-ds9hbf-9dfshbf-d9fsyhd-fshb-d9fsbh9-dsbh902qh2qh2qhpvnewbvnaeiwhcvfjaucvfpr-ewhnvgr90aewhbv-[w9rhb-9aewhb v-rhawbv-aw9hb9-rhasw-b9hsb9-h-ashb',
@@ -354,7 +354,7 @@ describe('createUser', function() {
     };
 
     try {
-      await userRepository.createUser(expectedArgs);
+      await userRepository.create(expectedArgs);
     } catch (err) {
       spy.restore();
 
@@ -472,7 +472,7 @@ describe('updateRole', function() {
   });
 });
 
-describe('deleteUser', function() {
+describe('delete', function() {
   beforeEach(function() {
     return truncate()
       .then(() => seed());
@@ -484,12 +484,12 @@ describe('deleteUser', function() {
   });
 
   it('should delete a user', async function() {
-    const spy = sinon.spy(userRepository, 'deleteUser');
+    const spy = sinon.spy(userRepository, 'delete');
     const expectedArgs = {
       id: 1,
     };
 
-    await userRepository.deleteUser(expectedArgs);
+    await userRepository.delete(expectedArgs);
 
     spy.restore();
 
@@ -502,12 +502,12 @@ describe('deleteUser', function() {
   });
 
   it('shouldn\'t delete anything', async function() {
-    const spy = sinon.spy(userRepository, 'deleteUser');
+    const spy = sinon.spy(userRepository, 'delete');
     const expectedArgs = {
       id: 13,
     };
 
-    await userRepository.deleteUser(expectedArgs);
+    await userRepository.delete(expectedArgs);
 
     spy.restore();
 

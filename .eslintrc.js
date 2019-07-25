@@ -6,13 +6,16 @@ module.exports = {
   'extends': [
     'eslint:recommended',
     'plugin:node/recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:jsdoc/recommended',
     'google',
-    "prettier"
+    'prettier'
   ],
   'globals': {
     'Atomics': 'readonly',
     'SharedArrayBuffer': 'readonly'
   },
+  'parser': '@typescript-eslint/parser',
   'parserOptions': {
     'ecmaVersion': 2018,
     'sourceType': 'module'
@@ -44,7 +47,21 @@ module.exports = {
       'error',
       'as-needed'
     ],
-    'require-jsdoc' : 'off',
-    'new-cap': 'off',
-  }
+    '@typescript-eslint/indent': [
+      'error',
+      2,
+    ],
+    '@typescript-eslint/no-explicit-any': 'off',
+    'no-invalid-this': 'off',
+    // in favor of jsdoc plugin
+    'valid-jsdoc': 'off',
+  },
+  'settings': {
+    'jsdoc': {
+      'tagNamePreference': {
+        'returns': 'return',
+        'augments': 'extends',
+      }
+    }
+  },
 };

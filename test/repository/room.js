@@ -168,7 +168,7 @@ describe('exist', function() {
   });
 });
 
-describe('createRoom', function() {
+describe('create', function() {
   beforeEach(function() {
     return truncate()
       .then(() => seed());
@@ -180,10 +180,10 @@ describe('createRoom', function() {
   });
 
   it('should insert room 9122', async function() {
-    const spy = sinon.spy(roomRepository, 'createRoom');
+    const spy = sinon.spy(roomRepository, 'create');
     const expectedArgs = { name: '9122' };
 
-    await roomRepository.createRoom(expectedArgs);
+    await roomRepository.create(expectedArgs);
 
     spy.restore();
 
@@ -201,11 +201,11 @@ describe('createRoom', function() {
   });
 
   it('should be rejected because of duplication', async function() {
-    const spy = sinon.spy(roomRepository, 'createRoom');
+    const spy = sinon.spy(roomRepository, 'create');
     const expectedArgs = { name: '10316' };
 
     try {
-      await roomRepository.createRoom(expectedArgs);
+      await roomRepository.create(expectedArgs);
     } catch (err) {
       spy.restore();
 
@@ -219,11 +219,11 @@ describe('createRoom', function() {
   });
 
   it('should be rejected because name is too long', async function() {
-    const spy = sinon.spy(roomRepository, 'createRoom');
+    const spy = sinon.spy(roomRepository, 'create');
     const expectedArgs = { name: 'DOOMED, YOU ARE DOOMED' };
 
     try {
-      await roomRepository.createRoom(expectedArgs);
+      await roomRepository.create(expectedArgs);
     } catch (err) {
       spy.restore();
 
@@ -237,7 +237,7 @@ describe('createRoom', function() {
   });
 });
 
-describe('updateRoom', function() {
+describe('update', function() {
   beforeEach(function() {
     return truncate()
       .then(() => seed());
@@ -249,10 +249,10 @@ describe('updateRoom', function() {
   });
 
   it('should update room 10316 to 10317', async function() {
-    const spy = sinon.spy(roomRepository, 'updateRoom');
+    const spy = sinon.spy(roomRepository, 'update');
     const expectedArgs = { id: 2, name: '10317' };
 
-    await roomRepository.updateRoom(expectedArgs);
+    await roomRepository.update(expectedArgs);
 
     spy.restore();
 
@@ -270,10 +270,10 @@ describe('updateRoom', function() {
   });
 
   it('shouldn\'t change anything', async function() {
-    const spy = sinon.spy(roomRepository, 'updateRoom');
+    const spy = sinon.spy(roomRepository, 'update');
     const expectedArgs = { id: 1000, name: 'DOOMED' };
 
-    await roomRepository.updateRoom(expectedArgs);
+    await roomRepository.update(expectedArgs);
 
     spy.restore();
 
@@ -295,11 +295,11 @@ describe('updateRoom', function() {
   });
 
   it('should be rejected because of duplication', async function() {
-    const spy = sinon.spy(roomRepository, 'updateRoom');
+    const spy = sinon.spy(roomRepository, 'update');
     const expectedArgs = { id: 1, name: '10316', };
 
     try {
-      await roomRepository.updateRoom(expectedArgs);
+      await roomRepository.update(expectedArgs);
     } catch (err) {
       spy.restore();
 
@@ -313,11 +313,11 @@ describe('updateRoom', function() {
   });
 
   it('should be rejected because name is too long', async function() {
-    const spy = sinon.spy(roomRepository, 'updateRoom');
+    const spy = sinon.spy(roomRepository, 'update');
     const expectedArgs = { id: 1, name: 'HAWHJIFHAIWFHJUIAF' };
 
     try {
-      await roomRepository.updateRoom(expectedArgs);
+      await roomRepository.update(expectedArgs);
     } catch (err) {
       spy.restore();
 
@@ -331,7 +331,7 @@ describe('updateRoom', function() {
   });
 });
 
-describe('deleteRoom', function() {
+describe('delete', function() {
   beforeEach(function() {
     return truncate()
       .then(() => seed());
@@ -343,10 +343,10 @@ describe('deleteRoom', function() {
   });
 
   it('should delete room 9121', async function() {
-    const spy = sinon.spy(roomRepository, 'deleteRoom');
+    const spy = sinon.spy(roomRepository, 'delete');
     const expectedArgs = { id: 1 };
 
-    await roomRepository.deleteRoom(expectedArgs);
+    await roomRepository.delete(expectedArgs);
 
     spy.restore();
 
@@ -359,10 +359,10 @@ describe('deleteRoom', function() {
   });
 
   it('shouldn\'t delete anything', async function() {
-    const spy = sinon.spy(roomRepository, 'deleteRoom');
+    const spy = sinon.spy(roomRepository, 'delete');
     const expectedArgs = { id: 12903 };
 
-    await roomRepository.deleteRoom(expectedArgs);
+    await roomRepository.delete(expectedArgs);
 
     spy.restore();
 

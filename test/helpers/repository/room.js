@@ -1,3 +1,4 @@
+import { Promise } from 'bluebird';
 import { createConnection, queryDB } from '../../../src/helpers/database'; 
 
 const connection = createConnection('dev');

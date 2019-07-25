@@ -5,84 +5,79 @@
  */
 
 import { TokenProcessor } from './../helpers/token';
-import { asyncWrapper, getNextExpirationDate } from './../helpers/misc';
+import { getNextExpirationDate } from './../helpers/api';
+import { handleError } from '../helpers/api';
 
 export default {
-  loginCheck: async (req, res, next) => {
-    const token = req.headers.authorization.split(' ')[1];
-    const sync = req.cookies.sync;
+  loginCheck: (req, res, next) => {
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const sync = req.cookies.sync;
 
-    if (token && sync) {
-      const { err, res: result } = await asyncWrapper(
-        TokenProcessor.verifyToken(
-          token,
-          sync
-        )
-      );
+      if (token && sync) {
+        const result = TokenProcessor.verifyToken(token, sync);
 
-      const ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
+        const ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
 
-      if (err || result.ip !== ip) {
-        const error = new Error('Invalid token');
+        if (result.ip && result.ip !== ip) {
+          const error = new Error('Invalid token');
+          error.statusCode = 401;
+
+          throw error;
+        }
+
+        req.auth = result;
+
+        next();
+      } else {
+        const error = new Error('Invalid credentials');
         error.statusCode = 401;
 
-        next(error);
+        throw error;
       }
-
-      if (result.status == 2) {
-        return res.status(401)
-          .json({
-            status: false,
-            data: null,
-            message: 'Token Expired',
-          });
-      } else {
-        req.auth = result;
-      }
-
-      next();
-    } else {
-      const err = new Error('Invalid token');
-      err.statusCode = 401;
-
-      next(err);
+    } catch (err) {
+      return next(handleError(err));
     }
   },
 
-  sendRefresh: async (req, res, next) => {
-    const { err, res: result } = await asyncWrapper(
-      TokenProcessor.refreshToken(
-        req.token
-      )
-    );
+  sendRefresh: (req, res, next) => {
+    try {
+      const token = req.headers.authorization.split(' ')[1];
+      const refresh = req.cookies.sync;
 
-    if (err) {
-      next(err);
+      if (token && refresh) {
+        TokenProcessor.refreshable(token, refresh);
+
+        const { primary, sync } = TokenProcessor.refreshToken(token);
+
+        res.cookie('synchro', sync, { 
+          expires: getNextExpirationDate(),
+          httpOnly: true,
+        });
+        
+        return res.status(200)
+          .json({
+            status: true,
+            message: 'Token Refreshed',
+            data: primary,
+          });
+      } else {
+        const error = new Error('Invalid credentials');
+        error.statusCode = 401;
+
+        throw error;
+      }
+    } catch (err) {
+      return next(handleError(err));
     }
-
-    const { primary, sync } = result;
-
-    res.cookie('synchro', sync, { 
-      expires: getNextExpirationDate(),
-      httpOnly: true,
-    });
-
-    return res.status(200)
-      .json({
-        status: true,
-        message: 'Token Refreshed',
-        data: primary,
-      });
   },
 
   adminAuth: (req, res, next) => {
     if (!req.auth.isAdmin) {
-      return res.status(403)
-        .json({
-          status: false,
-          data: null,
-          message: 'Access denied',
-        });
+      const err = new Error('Administrator rights required');
+      err.statusCode(403);
+      
+      next(handleError(err));
     }
 
     next();

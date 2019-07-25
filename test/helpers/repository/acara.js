@@ -1,3 +1,4 @@
+import { Promise } from 'bluebird';
 import { truncate as truncateUser, seed as seedUser } from './user';
 import { truncate as truncateRoom, seed as seedRoom } from './room';
 
