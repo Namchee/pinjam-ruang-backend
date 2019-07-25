@@ -5,8 +5,6 @@ import { roomRoutes } from './v1/room';
 
 const router = express.Router();
 
-router.use('(acara)', acaraRoutes);
-router.use('(user|login)', userRoutes);
-router.use('(room)', roomRoutes);
+router.use(acaraRoutes, userRoutes, roomRoutes);
 
 export { router as v1 };

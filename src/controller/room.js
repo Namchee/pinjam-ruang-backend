@@ -4,57 +4,43 @@
  * Author: Namchee
  */
 
-import { RoomService } from './../services/room';
+import { handleError, handleSuccess } from './../helpers/api';
 
-export const RoomController = (function() {
-  let service = undefined;
-
-  const handleError = function(err) {
-    err.statusCode = err.statusCode || 500;
-
-    return err;
-  };
-
-  const handleSuccess = function(data) {
-    return {
-      status: true,
-      message: null,
-      data,
-    };
-  };
-
+/**
+ * Creates a new Room Controller
+ *
+ * @export
+ * @param {object} service Room Service
+ * @return {object} Room Controller
+ */
+export function RoomController(service) {
   return {
-    inject: function(conn) {
-      service = RoomService.inject(conn);
-      return this;
-    },
-
     findRoom: (req, res, next) => {
-      service.find(req.params)
+      service.findRoom(req.params)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
     createRoom: (req, res, next) => {
-      service.find(req.body)
+      service.createRoom(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
     updateRoomInfo: (req, res, next) => {
-      service.update(req.body)
+      service.updateRoom(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
     deleteRoom: (req, res, next) => {
-      service.delete(req.body)
+      service.deleteRoom(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     }
   };
-})();
+}

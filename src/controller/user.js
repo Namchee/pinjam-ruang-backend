@@ -3,36 +3,15 @@
  * Contains anything related to user-targeting operation
  * Author: Namchee
  */
-
-import { UserService } from './../services/user';
 import { TokenProcessor } from './../helpers/token';
-import { getNextExpirationDate } from './../helpers/misc';
+import { getNextExpirationDate, handleError, handleSuccess } from './../helpers/api';
 
-export const UserController = (function() {
-  let service = undefined;
+export function UserController(services) {
+  const service = services;
 
-  const handleError = function(err) {
-    err.statusCode = err.statusCode || 500;
-
-    return err;
-  };
-
-  const handleSuccess = function(data) {
-    return {
-      status: true,
-      message: null,
-      data,
-    };
-  };
-  
   return {
-    inject: function(conn) {
-      service = UserService.inject(conn);
-      return this;
-    },
-
-    login: (req, res, next) => {
-      service.login(req.body)
+    authenticate: (req, res, next) => {
+      service.authenticate(req.body)
         .then(result => {
           const user = {
             id: result.id,
@@ -46,8 +25,8 @@ export const UserController = (function() {
           };
         })
         .then(({ user, token }) => {
-          res.cookie('synchro', token.sync, { 
-            expires: getNextExpirationDate(), 
+          res.cookie('synchro', token.sync, {
+            expires: getNextExpirationDate(),
             httpOnly: true,
           });
 
@@ -63,53 +42,31 @@ export const UserController = (function() {
     },
 
     findUser: (req, res, next) => {
-      service.find(req.params)
+      service.findUser(req.params)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
     createUser: (req, res, next) => {
-      service.create(req.body)
+      service.createUser(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
-    updateUserInfo: (req, res, next) => {
-      service.updateInsensitive(req.body)
+    updateUserRole: (req, res, next) => {
+      service.updateUserRole(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
 
-    updateUserPassword: (req, res, next) => {
-      service.updatePassword(req.body)
-        .then(result => res.status(200)
-          .json(handleSuccess(result)))
-        .catch(err => next(handleError(err)));
-    },
-
-    powerUpdate: (req, res, next) => {
-      service.powerUpdate(req.body)
-        .then(result => res.status(200)
-          .json(handleSuccess(result)))
-        .catch(err => next(handleError(err)));
-    },
-
-    checkCredentials: (req, res, next) => {
-      service.checkCredentials(req.body)
-        .then(() => res.status(200)
-          .json(handleSuccess(true)))
-        .catch(() => res.status(403)
-          .json(handleSuccess(false)));
-    },
-    
     deleteUser: (req, res, next) => {
-      service.delete(req.body)
+      service.deleteUser(req.body)
         .then(result => res.status(200)
           .json(handleSuccess(result)))
         .catch(err => next(handleError(err)));
     },
   };
-})();
+}

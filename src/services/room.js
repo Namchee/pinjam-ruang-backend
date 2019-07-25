@@ -1,4 +1,4 @@
-import { validateData } from './../helpers/misc';
+import { validateData } from '../helpers/api';
 import { createRoomSchema, updateRoomSchema, deleteRoomSchema } from './../schemas/room';
 import { Room } from '../model/room';
 
@@ -17,82 +17,99 @@ function toDataArray(data) {
 }
 
 export function checkRoomExistence(roomRepository) {
-  return function(params) {
-    if (params &&
-      Object.keys(params).length === 1 &&
-      params.id) {
-      return roomRepository.exist(params)
-        .then(res => res[0].jml)
-        .catch(err => {
-          throw err;
-        });
-    } else {
-      const err = new Error('Invalid parameters');
-      err.statusCode = 422;
-
+  return async function(params) {
+    try {
+      if (params &&
+        Object.keys(params).length === 1 &&
+        params.id) {
+        const res = await roomRepository.exist(params);
+        
+        return res[0].jml > 0;
+      } else {
+        const err = new Error('Invalid parameters');
+        err.statusCode = 422;
+  
+        throw err;
+      }
+    } catch (err) {
       throw err;
     }
   };
 }
 
 export function findRoom(roomRepository) {
-  return function(params) {
-    if (params && Object.keys(params).length === 1) {
-      if (params.name) {
-        return roomRepository.findByName(params.name)
-          .then(res => toDataArray(res))
-          .catch(err => {
-            throw err;
-          });
+  return async function(params) {
+    try {
+      if (params && Object.keys(params).length === 1) {
+        if (params.name) {
+          const res = roomRepository.findByName(params.name);
+          
+          return toDataArray(res);
+        } else {
+          const err = new Error('Invalid parameters');
+          err.statusCode = 422;
+  
+          throw err;
+        }
+      } else if (params && Object.keys(params).length === 0) {
+        const res = await roomRepository.findAll();
+
+        return toDataArray(res);
       } else {
         const err = new Error('Invalid parameters');
         err.statusCode = 422;
-
+  
         throw err;
       }
-    } else if (params && Object.keys(params).length === 0) {
-      return roomRepository.findAll()
-        .then(res => toDataArray(res))
-        .catch(err => {
-          throw err;
-        });
-    } else {
-      const err = new Error('Invalid parameters');
-      err.statusCode = 422;
-
+    } catch (err) {
       throw err;
     }
   };
 }
 
 export function createRoom(roomRepository) {
-  return function(params) {
-    return validateData(params, createRoomSchema)
-      .then(() => roomRepository.createRoom(params))
-      .catch(err => {
-        throw err;
-      });
+  return async function(params) {
+    try {
+      await validateData(params, createRoomSchema);
+
+      return await roomRepository.create(params);
+    } catch (err) {
+      throw err;
+    }
   };
 }
 
 export function updateRoom(roomRepository) {
-  return function(params) {
-    return validateData(params, updateRoomSchema)
-      .then(() => checkRoomExistence(roomRepository)({ id: params.id }))
-      .then(() => roomRepository.updateRoom(params))
-      .catch(err => {
-        throw err;
-      });
+  return async function(params) {
+    try {
+      await validateData(params, updateRoomSchema);
+      await checkRoomExistence(roomRepository)({ id: params.id });
+
+      return await roomRepository.update(params);
+    } catch (err) {
+      throw err;
+    }
   };
 }
 
 export function deleteRoom(roomRepository) {
-  return function(params) {
-    return validateData(params, deleteRoomSchema)
-      .then(() => checkRoomExistence(roomRepository)({ id: params.id }))
-      .then(() => roomRepository.deleteRoom(params))
-      .catch(err => {
-        throw err;
-      });
+  return async function(params) {
+    try {
+      await validateData(params, deleteRoomSchema);
+      await checkRoomExistence(roomRepository)({ id: params.id });
+
+      return await roomRepository.delete(params);
+    } catch (err) {
+      throw err;
+    }
+  };
+}
+
+export function createRoomService(roomRepository) {
+  return {
+    findRoom: findRoom(roomRepository),
+    createRoom: createRoom(roomRepository),
+    updateRoom: updateRoom(roomRepository),
+    deleteRoom: deleteRoom(roomRepository),
   };
 }

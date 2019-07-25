@@ -1,31 +1,30 @@
 import express from 'express';
 import auth from './../../../middlewares/auth';
+import { UserRepository } from './../../../repository/user';
+import { createUserService } from './../../../services/user';
 import { UserController } from './../../../controller/user';
-import { createConnection } from './../../../helpers/connection';
+import { createConnection } from './../../../helpers/database';
 
 const router = express.Router();
-const userController = UserController.inject(createConnection());
+const conn = createConnection();
 
-router.post('/login', userController.login);
+const userRepo = UserRepository(conn);
+const userService = createUserService(userRepo);
+const userController = UserController(userService);
+
+router.post('/login', userController.authenticate);
 
 router.post('*', auth.loginCheck);
 router.patch('*', auth.loginCheck);
 router.delete('*', auth.loginCheck);
 
-router.get('/get_user', userController.find);
-router.get('/get_user_by_id/:id', userController.find);
-router.get('/get_user_by_name/:name', userController.find);
-router.get('/get_user_by_username/:username', userController.find);
+router.get('/get_user', userController.findUser);
+router.get('/get_user_by_id/:id', userController.findUser);
+router.get('/get_user_by_name/:name', userController.findUser);
+router.get('/get_user_by_email/:email', userController.findUser);
 
-router.post('/create_user', auth.adminAuth, userController.create);
+router.patch('/update_user', auth.adminAuth, userController.updateUserRole);
 
-router.patch('/update_info', userController.updateInfo);
-router.patch('/change_password', userController.updatePassword);
-
-router.patch('/update_user', auth.adminAuth, userController.powerUpdate);
-
-router.delete('/delete_user', auth.adminAuth, userController.delete);
-
-router.post('/check_credentials', userController.checkCredentials);
+router.delete('/delete_user', auth.adminAuth, userController.deleteUser);
 
 export { router as userRoutes };

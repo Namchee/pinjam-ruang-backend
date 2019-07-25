@@ -1,7 +1,7 @@
 import Joi from '@hapi/joi';
 
 export const authenticationSchema = Joi.object().keys({
-  username: J
+  token: Joi.string().required(),
 });
 
 export const createUserSchema = Joi.object().keys({

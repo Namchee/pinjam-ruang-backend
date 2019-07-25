@@ -1,4 +1,4 @@
-import { queryDB as queryWrapper } from './../helpers/misc';
+import { queryDB as queryWrapper } from './../helpers/database';
 
 export const UserRepository = function(connection) {
   const queryDB = (query, params) => {

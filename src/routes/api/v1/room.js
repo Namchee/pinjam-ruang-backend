@@ -1,10 +1,16 @@
 import express from 'express';
+import { RoomRepository } from './../../../repository/room';
+import { createRoomService } from './../../../services/room';
 import { RoomController } from './../../../controller/room';
-import { createConnection } from './../../../helpers/connection';
+import { createConnection } from './../../../helpers/database';
 import auth from './../../../middlewares/auth';
 
 const router = express.Router();
-const roomController = RoomController.inject(createConnection());
+const conn = createConnection();
+
+const roomRepo = RoomRepository(conn);
+const roomService = createRoomService(roomRepo);
+const roomController = RoomController(roomService);
 
 router.post('*', auth.loginCheck, auth.adminAuth);
 router.patch('*', auth.loginCheck, auth.adminAuth);
