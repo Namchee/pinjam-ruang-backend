@@ -3,7 +3,4 @@
 Back-end part of <code>pinjam-ruang</code>
 <p>Just a quick conversion from NoSQL to SQL DB and few minor improvements</p>
 
-<h2>Initalizing</h2>
-<p>
-    To initialize this bad boy for the first time, follow these steps SEQUENTIALLY (I held nothing responsible otherwise)
-</p>
+> Currently, this project is on hiatus until I can find someone trustworthy to work on this project together. I will also delete this if someone managed to create this faster than me
